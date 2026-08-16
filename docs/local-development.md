@@ -89,6 +89,14 @@ Use `MockMailTransport` from `@your-flare-mails/core`. The Email Worker's
 `send_email` binding is simulated locally by Wrangler (logged, not sent) unless
 you set `remote: true` deliberately.
 
+## Mailbox read APIs
+
+See [mailbox-apis.md](./mailbox-apis.md). Temporary auth header for Phase 3:
+
+```bash
+curl -s -H 'x-yfm-user-id: user_seed_owner' http://127.0.0.1:8787/api/mailboxes
+```
+
 ## Verify
 
 ```bash

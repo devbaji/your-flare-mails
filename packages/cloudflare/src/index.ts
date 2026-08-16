@@ -5,5 +5,10 @@
 export const PACKAGE_NAME = '@your-flare-mails/cloudflare' as const;
 export type PackageName = typeof PACKAGE_NAME;
 
+export * from './db.js';
 export * from './mime/parse.js';
 export * from './ingest/repository.js';
+export * from './r2/blobs.js';
+export * from './repos/mailboxes.js';
+export * from './repos/threads.js';
+export * from './repos/messages.js';

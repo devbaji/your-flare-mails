@@ -3,6 +3,10 @@ import {
   type NormalizedInboundEmail,
 } from '@your-flare-mails/core';
 
+import type { D1Queryable } from '../db.js';
+
+export type { D1Queryable } from '../db.js';
+
 export type MailboxRow = {
   id: string;
   address: string;
@@ -28,26 +32,6 @@ export type CreateMessageInput = {
   nowIso: string;
   messageId: string;
   labelInboxId: string | null;
-};
-
-/** Minimal D1 surface used by Phase 2 ingest. */
-export type D1Queryable = {
-  prepare(query: string): {
-    bind(...values: unknown[]): {
-      first<T = Record<string, unknown>>(): Promise<T | null>;
-      run(): Promise<unknown>;
-      all<T = Record<string, unknown>>(): Promise<{ results: T[] }>;
-    };
-  };
-  batch(statements: unknown[]): Promise<unknown>;
-};
-
-export type R2Puttable = {
-  put(
-    key: string,
-    value: ArrayBuffer | Uint8Array | string,
-    options?: { httpMetadata?: { contentType?: string } },
-  ): Promise<unknown>;
 };
 
 function utf8Bytes(value: string): number {
@@ -287,27 +271,4 @@ export class D1IngestRepository {
       .bind(nonce, fingerprint, nowIso)
       .run();
   }
-}
-
-export class R2BlobStore {
-  constructor(private readonly bucket: R2Puttable) {}
-
-  async putBytes(
-    key: string,
-    bytes: Uint8Array,
-    contentType = 'application/octet-stream',
-  ): Promise<void> {
-    await this.bucket.put(key, bytes, {
-      httpMetadata: { contentType },
-    });
-  }
-}
-
-export function base64ToBytes(value: string): Uint8Array {
-  const binary = atob(value);
-  const out = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i += 1) {
-    out[i] = binary.charCodeAt(i);
-  }
-  return out;
 }

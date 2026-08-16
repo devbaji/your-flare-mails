@@ -6,8 +6,9 @@ real, self-hosted email mailbox on a domain you manage through Cloudflare
 
 ## Status
 
-**Phase 2 — Inbound ingest.** Email Worker + HMAC `POST /api/inbound/email`, MIME
-parse, idempotent D1/R2 persistence, and fixture injection are in place.
+**Phase 3 — Mailbox APIs.** D1 repositories, private R2 downloads via signed
+tokens, and mailbox/thread/message/attachment services are available on
+`workers/api`.
 
 ## Monorepo map
 

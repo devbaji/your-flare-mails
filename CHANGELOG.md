@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Phase 3 mailbox APIs: D1 repositories, `mailbox`/`thread`/`message`/`attachment`
+  services with mailbox membership checks, HMAC-signed private R2 download URLs,
+  and read routes on `workers/api` (temporary `X-YFM-User-Id` until Phase 8).
 - Phase 2 inbound pipeline: `postal-mime` normalization, HMAC-signed
   `POST /api/inbound/email`, nonce replay protection, fingerprint idempotency,
   basic `In-Reply-To`/`References` threading, `workers/api` + `workers/email-receiver`,

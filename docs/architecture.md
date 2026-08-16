@@ -37,6 +37,9 @@ anything from Vue or Nuxt.
 - **Inbound:** Email Routing → `workers/email-receiver` → HMAC `POST /api/inbound/email`
   on `workers/api` → `ingestEmail()` in `packages/server` (see
   [inbound-email.md](./inbound-email.md))
+- **Mailbox APIs:** repositories in `packages/cloudflare`, services in
+  `packages/server`, HTTP on `workers/api` (see [mailbox-apis.md](./mailbox-apis.md))
+- **Attachments:** private R2; short-lived HMAC download tokens (never public bucket URLs)
 - **Outbound:** `MailTransport` → Cloudflare Email Sending (Phase 6)
 - **Realtime:** per-mailbox Durable Object / WebSocket Hibernation (Phase 7)
 
