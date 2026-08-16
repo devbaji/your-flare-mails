@@ -434,6 +434,36 @@ export function createMailApiClient(options: MailApiClientOptions) {
       ),
     mailboxWebSocketPath: (mailboxId: string) =>
       `/api/mailboxes/${encodeURIComponent(mailboxId)}/ws`,
+    registerDevice: (body: {
+      platform: string;
+      pushEndpoint: string;
+      pushKeysJson?: string | null;
+      mailboxId?: string;
+    }) =>
+      request<{
+        device: {
+          id: string;
+          userId: string;
+          platform: string;
+          pushEndpoint: string | null;
+          pushKeysJson: string | null;
+          createdAt: string;
+          updatedAt: string;
+        };
+      }>('/api/devices', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+      }),
+    unregisterDevice: (deviceId: string) =>
+      request<{ ok: boolean }>(`/api/devices/${encodeURIComponent(deviceId)}`, {
+        method: 'DELETE',
+      }),
+    subscribeDeviceMailbox: (deviceId: string, mailboxId: string) =>
+      request<{ ok: boolean }>(
+        `/api/devices/${encodeURIComponent(deviceId)}/mailboxes/${encodeURIComponent(mailboxId)}`,
+        { method: 'POST' },
+      ),
   };
 }
 

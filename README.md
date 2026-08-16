@@ -6,9 +6,9 @@ real, self-hosted email mailbox on a domain you manage through Cloudflare
 
 ## Status
 
-**Phase 9 — Desktop.** Tauri 2 shell wrapping `apps/web`, OS notifications on
-realtime events, OS keychain session storage, and system tray basics. See
-[docs/desktop.md](./docs/desktop.md).
+**Phase 10 — Mobile + push.** Tauri iOS/Android targets, `tauri-plugin-mobile-push`
+(APNs/FCM), device registration APIs, and remote push fan-out on mail events.
+See [docs/mobile.md](./docs/mobile.md).
 
 ## Monorepo map
 

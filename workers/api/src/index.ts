@@ -9,11 +9,14 @@ import {
 } from '@your-flare-mails/core';
 import {
   CloudflareEmailTransport,
+  CloudflarePushTransport,
   MailboxRealtime,
+  MockPushTransport,
   consumeRateLimit,
   notifyMailboxRealtime,
   pollMailboxRealtime,
   upgradeMailboxRealtimeWebSocket,
+  type PushTransport,
   type SendEmailBinding,
 } from '@your-flare-mails/cloudflare';
 import {
@@ -48,13 +51,17 @@ import {
   listThreads,
   loginWithPassword,
   logoutSession,
+  notifyMailboxDevices,
   openAttachmentContent,
   openDraftAttachmentContent,
   parseCorsOrigins,
+  registerDevice,
   resolveRequestAuth,
   searchMessages,
   securityHeaders,
   sendDraft,
+  subscribeDeviceToMailbox,
+  unregisterDevice,
   updateDraft,
   uploadDraftAttachment,
   type AuthenticatedSession,
@@ -81,6 +88,13 @@ export interface Env {
   PUBLIC_BASE_URL?: string;
   EMAIL?: SendEmailBinding;
   FORCE_MOCK_TRANSPORT?: string;
+  FORCE_MOCK_PUSH?: string;
+  APNS_TEAM_ID?: string;
+  APNS_KEY_ID?: string;
+  APNS_PRIVATE_KEY_PEM?: string;
+  APNS_BUNDLE_ID?: string;
+  APNS_PRODUCTION?: string;
+  FCM_SERVICE_ACCOUNT_JSON?: string;
   MAILBOX_REALTIME: DurableObjectNamespace;
 }
 
@@ -190,6 +204,69 @@ async function notifyMailbox(env: Env, event: MailboxRealtimeEvent): Promise<voi
   if (!result.ok) {
     console.error('[realtime] notify failed', result.error);
   }
+
+  if (event.type !== 'message.created' && event.type !== 'message.sent') {
+    return;
+  }
+
+  const title = event.type === 'message.created' ? 'New mail' : 'Message sent';
+  const body =
+    event.type === 'message.created'
+      ? 'A new message arrived in your mailbox'
+      : 'Your message was sent';
+  try {
+    await notifyMailboxDevices(
+      { db: env.DB, push: createPushTransport(env) },
+      event.mailboxId,
+      {
+        title,
+        body,
+        data: {
+          type: event.type,
+          mailboxId: event.mailboxId,
+          messageId: event.messageId,
+          threadId: event.threadId,
+        },
+      },
+    );
+  } catch (error) {
+    console.error('[push] notify failed', error);
+  }
+}
+
+function createPushTransport(env: Env): PushTransport {
+  const mock = new MockPushTransport();
+  if (env.FORCE_MOCK_PUSH === 'true') {
+    return mock;
+  }
+
+  const apns =
+    env.APNS_TEAM_ID &&
+    env.APNS_KEY_ID &&
+    env.APNS_PRIVATE_KEY_PEM &&
+    env.APNS_BUNDLE_ID
+      ? {
+          teamId: env.APNS_TEAM_ID,
+          keyId: env.APNS_KEY_ID,
+          privateKeyPem: env.APNS_PRIVATE_KEY_PEM.replace(/\\n/g, '\n'),
+          bundleId: env.APNS_BUNDLE_ID,
+          production: env.APNS_PRODUCTION === 'true',
+        }
+      : undefined;
+
+  const fcm = env.FCM_SERVICE_ACCOUNT_JSON
+    ? { serviceAccountJson: env.FCM_SERVICE_ACCOUNT_JSON }
+    : undefined;
+
+  if (!apns && !fcm) {
+    return mock;
+  }
+
+  return new CloudflarePushTransport({
+    ...(apns ? { apns } : {}),
+    ...(fcm ? { fcm } : {}),
+    fallback: mock,
+  });
 }
 
 function secureCookies(env: Env, request: Request): boolean {
@@ -458,6 +535,41 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
         via: auth.via,
         csrfToken: auth.csrfToken,
       });
+    }
+
+    if (request.method === 'POST' && pathname === '/api/devices') {
+      const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+      const device = await registerDevice(
+        { db: env.DB },
+        ctx,
+        {
+          platform: body.platform,
+          pushEndpoint: body.pushEndpoint,
+          pushKeysJson: body.pushKeysJson,
+          mailboxId: body.mailboxId,
+        },
+      );
+      return json({ device }, 201);
+    }
+
+    const deviceMatch = match(pathname, /^\/api\/devices\/([^/]+)$/);
+    if (request.method === 'DELETE' && deviceMatch) {
+      await unregisterDevice({ db: env.DB }, ctx, deviceMatch[1]!);
+      return json({ ok: true });
+    }
+
+    const deviceMailboxMatch = match(
+      pathname,
+      /^\/api\/devices\/([^/]+)\/mailboxes\/([^/]+)$/,
+    );
+    if (request.method === 'POST' && deviceMailboxMatch) {
+      await subscribeDeviceToMailbox(
+        { db: env.DB },
+        ctx,
+        deviceMailboxMatch[1]!,
+        deviceMailboxMatch[2]!,
+      );
+      return json({ ok: true });
     }
 
     if (request.method === 'GET' && pathname === '/api/mailboxes') {

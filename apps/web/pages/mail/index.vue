@@ -280,6 +280,15 @@ onMounted(async () => {
   await refreshMailboxes();
   await refreshThreads();
   await refreshDraftPanel();
+
+  const { isMobile, registerPushDevice } = useNotifications();
+  if (isMobile() && currentId.value) {
+    try {
+      await registerPushDevice({ mailboxId: currentId.value });
+    } catch (err) {
+      console.warn('[push] registration skipped', err);
+    }
+  }
 });
 
 const currentMailbox = computed(

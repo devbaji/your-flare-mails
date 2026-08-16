@@ -17,6 +17,7 @@
     "@nuxt/kit": "^3.17.4",
     "@tauri-apps/api": "^2.8.0",
     "@tauri-apps/plugin-notification": "^2.3.0",
+    "tauri-plugin-mobile-push-api": "^0.1.4",
     "@your-flare-mails/api-client": "workspace:*",
     "@your-flare-mails/server": "workspace:*"
   },

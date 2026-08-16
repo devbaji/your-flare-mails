@@ -21,7 +21,9 @@
     "ingest:fixture": "pnpm --filter @your-flare-mails/infra run ingest:fixture",
     "dev:api": "pnpm --filter @your-flare-mails/api dev",
     "dev:web": "pnpm --filter @your-flare-mails/web dev",
-    "dev:desktop": "pnpm --filter @your-flare-mails/desktop dev"
+    "dev:desktop": "pnpm --filter @your-flare-mails/desktop dev",
+    "dev:android": "pnpm --filter @your-flare-mails/desktop tauri android dev",
+    "dev:ios": "pnpm --filter @your-flare-mails/desktop tauri ios dev"
   },
   "devDependencies": {
     "@your-flare-mails/eslint-config": "workspace:*",

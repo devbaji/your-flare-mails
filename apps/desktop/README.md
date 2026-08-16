@@ -2,12 +2,13 @@
 
 Tauri 2 shell that loads the **YourFlareMails** Nuxt reference app (`apps/web`).
 
-## Features (Phase 9)
+## Features (Phase 9–10)
 
 - Desktop window wrapping `apps/web` (dev: Nuxt on `:3000`; release: static generate)
 - OS notifications via `@tauri-apps/plugin-notification` on realtime events
 - Session token + CSRF stored in the **OS keychain** (`keyring` crate commands)
 - System tray: show window / quit; close-to-tray
+- Mobile (iOS/Android) via `tauri android|ios` + remote push (`tauri-plugin-mobile-push`)
 
 ## Prerequisites
 
@@ -37,5 +38,5 @@ Runs `YFM_DESKTOP=1 nuxt generate` then `tauri build`.
 
 ## Notes
 
-- Mobile (iOS/Android) targets are Phase 10.
-- Web Push / APNs / FCM are not wired here — desktop uses local notifications while running.
+- Mobile push setup: [docs/mobile.md](../../docs/mobile.md)
+- Web Push / VAPID browser delivery can reuse Device `push_keys_json` later

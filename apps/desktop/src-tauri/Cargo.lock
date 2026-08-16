@@ -3606,6 +3606,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "tauri-plugin-mobile-push"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9ab15008b7d1b350e7021d8afe434b17d670cb54e9ff1baa0e4b55392d265aa3"
+dependencies = [
+ "log",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-plugin",
+ "thiserror 2.0.20",
+]
+
+[[package]]
 name = "tauri-plugin-notification"
 version = "2.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5026,6 +5040,7 @@ dependencies = [
  "serde_json",
  "tauri",
  "tauri-build",
+ "tauri-plugin-mobile-push",
  "tauri-plugin-notification",
 ]
 

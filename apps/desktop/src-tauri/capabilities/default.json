@@ -9,6 +9,7 @@
     "core:window:allow-hide",
     "core:window:allow-set-focus",
     "core:tray:default",
-    "notification:default"
+    "notification:default",
+    "mobile-push:default"
   ]
 }

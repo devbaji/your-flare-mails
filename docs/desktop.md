@@ -37,5 +37,4 @@ Browser sessions stay in memory + cookie/Bearer as in Phase 8.
 
 ## Out of scope (later)
 
-- Phase 10: iOS/Android + remote push
-- Full `notificationService` / Web Push VAPID backend
+- Full Web Push VAPID browser delivery (Device schema ready; see [mobile.md](./mobile.md))

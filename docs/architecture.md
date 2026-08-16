@@ -50,6 +50,8 @@ anything from Vue or Nuxt.
   (see [auth.md](./auth.md))
 - **Desktop:** Tauri 2 shell with local notifications + keychain sessions
   (see [desktop.md](./desktop.md))
+- **Mobile push:** APNs/FCM via `tauri-plugin-mobile-push` + device registration
+  (see [mobile.md](./mobile.md))
 
 ## Domain model
 

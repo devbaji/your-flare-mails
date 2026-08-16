@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Phase 10 mobile push: Tauri Android project init path, `tauri-plugin-mobile-push`,
+  device registration APIs, APNs/FCM/`MockPushTransport` fan-out on ingest/send,
+  `useNotifications().registerPushDevice()`, and [docs/mobile.md](./docs/mobile.md).
 - Phase 9 desktop: Tauri 2 shell (`apps/desktop`) wrapping Nuxt, OS notifications
   via `useNotifications()`, OS keychain session storage, close-to-tray, and
   [docs/desktop.md](./docs/desktop.md).

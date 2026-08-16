@@ -11,6 +11,7 @@
 | [realtime.md](./realtime.md) | Phase 7 |
 | [auth.md](./auth.md) | Phase 8 |
 | [desktop.md](./desktop.md) | Phase 9 |
+| [mobile.md](./mobile.md) | Phase 10 |
 | [web-ui.md](./web-ui.md) | Phase 4–8 |
 | Cloudflare setup | When deploying for real |
 | Deployment | Later |

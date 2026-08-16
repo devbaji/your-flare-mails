@@ -37,6 +37,7 @@ fn secret_delete(key: String) -> Result<(), String> {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_mobile_push::init())
         .invoke_handler(tauri::generate_handler![
             secret_set,
             secret_get,
