@@ -13,8 +13,7 @@
 | [desktop.md](./desktop.md) | Phase 9 |
 | [mobile.md](./mobile.md) | Phase 10 |
 | [web-ui.md](./web-ui.md) | Phase 4–8 |
-| Cloudflare setup | When deploying for real |
-| Deployment | Later |
-| Environment variables | See `.env.example` |
+| [deploy.md](./deploy.md) | **Production Cloudflare deploy** |
+| Environment variables | [`.env.example`](../.env.example), [`config/deploy.example.env`](../config/deploy.example.env) |
 
 Product brief: see [`CURSOR_MASTER_PROMPT.md`](../CURSOR_MASTER_PROMPT.md) at the repo root.

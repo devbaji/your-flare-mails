@@ -2,8 +2,8 @@
 const brandName = useRuntimeConfig().public.yourFlareMails.brandName as string;
 const { login, pending, error, refreshSession, isAuthenticated } = useAuth();
 
-const email = ref('owner@example.com');
-const password = ref('owner-dev-password');
+const email = ref('');
+const password = ref('');
 
 onMounted(async () => {
   await refreshSession();
@@ -27,7 +27,7 @@ async function onSubmit() {
     <form class="yfm-login__form" @submit.prevent="onSubmit">
       <p class="yfm-login__brand">{{ brandName }}</p>
       <h1>Sign in</h1>
-      <p class="yfm-login__hint">Local seed: owner@example.com / owner-dev-password</p>
+      <p class="yfm-login__hint">Use your mailbox owner account to sign in.</p>
       <label>
         Email
         <input v-model="email" type="email" autocomplete="username" required />

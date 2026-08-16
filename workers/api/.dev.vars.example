@@ -1,0 +1,5 @@
+# Local Wrangler secrets / overrides for workers/api (gitignored as .dev.vars)
+# Copy: cp workers/api/.dev.vars.example workers/api/.dev.vars
+#
+# INGEST_HMAC_SECRET=replace-me-with-a-long-random-string
+# BLOB_SIGNING_SECRET=replace-me-with-a-different-long-random-string

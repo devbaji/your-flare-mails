@@ -17,6 +17,17 @@ workers/*/.wrangler/
 .env
 .env.*
 !.env.example
+.dev.vars
+**/.dev.vars
+
+# Local deploy overlays (generated / personal — never commit)
+config/deploy.local.env
+**/wrangler.deploy.jsonc
+apps/web/.env.production.local
+infra/seed/seed-prod.sql
+
+# Wrangler auth / local caches (also covered by .wrangler/)
+.wrangler/state/
 
 # Test / coverage
 coverage/

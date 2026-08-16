@@ -62,8 +62,10 @@ export class CloudflareEmailTransport implements MailTransport {
 
   async send(message: OutboundMail): Promise<SendResult> {
     const parsed = OutboundMailSchema.parse(message);
+    // Cloudflare Email Sending generates Message-ID itself and rejects it in
+    // headers. Keep local messageId for D1; only forward threading headers.
+    // @see https://developers.cloudflare.com/email-service/reference/headers/
     const headers: Record<string, string> = {};
-    if (parsed.messageId) headers['Message-ID'] = parsed.messageId;
     if (parsed.inReplyTo) headers['In-Reply-To'] = parsed.inReplyTo;
     if (parsed.references) headers.References = parsed.references;
 

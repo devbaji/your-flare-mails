@@ -5,7 +5,8 @@
 
 const encoder = new TextEncoder();
 
-export const PASSWORD_PBKDF2_ITERATIONS = 210_000;
+/** Cloudflare Workers reject PBKDF2 above 100_000 iterations. */
+export const PASSWORD_PBKDF2_ITERATIONS = 100_000;
 export const PASSWORD_SALT_BYTES = 16;
 export const PASSWORD_HASH_BYTES = 32;
 

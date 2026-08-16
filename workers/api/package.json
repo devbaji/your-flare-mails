@@ -6,6 +6,8 @@
   "description": "HTTP API Worker (ingest + future Nitro migration target)",
   "scripts": {
     "dev": "wrangler dev --config wrangler.jsonc --port 8787 --persist-to ../../infra/.wrangler/state",
+    "deploy:production": "wrangler deploy --config wrangler.deploy.jsonc",
+    "secret:production": "wrangler secret put --config wrangler.deploy.jsonc",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint .",
     "test": "vitest run --passWithNoTests"

@@ -1,0 +1,8 @@
+{
+  "name": "your-flare-mails-web",
+  "compatibility_date": "2026-08-01",
+  "main": ".output/server/index.mjs",
+  "assets": {
+    "directory": ".output/public"
+  }
+}

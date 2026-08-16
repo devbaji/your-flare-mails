@@ -23,8 +23,9 @@ describe('CloudflareEmailTransport', () => {
     expect(payload).toBeDefined();
     expect(payload!.from).toEqual({ email: 'hello@example.com', name: 'Hello' });
     expect(payload!.to).toEqual(['alice@example.com']);
-    expect(payload!.headers?.['Message-ID']).toBe('<out-1@example.com>');
+    expect(payload!.headers?.['Message-ID']).toBeUndefined();
     expect(payload!.headers?.['In-Reply-To']).toBe('<in-1@example.com>');
+    expect(payload!.headers?.References).toBe('<in-1@example.com>');
   });
 
   it('returns ok:false when the binding throws', async () => {

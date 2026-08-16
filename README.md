@@ -1,62 +1,66 @@
 # YourFlareMails
 
-Open-source, Cloudflare-native framework and reference application for running a
-real, self-hosted email mailbox on a domain you manage through Cloudflare
-(e.g. `hello@example.com`).
+Open-source, Cloudflare-native framework and reference app for a self-hosted
+email mailbox on a domain you manage in Cloudflare (e.g. `hello@example.com`).
 
-## Status
-
-**Phase 10 — Mobile + push.** Tauri iOS/Android targets, `tauri-plugin-mobile-push`
-(APNs/FCM), device registration APIs, and remote push fan-out on mail events.
-See [docs/mobile.md](./docs/mobile.md).
-
-## Monorepo map
-
-```
-apps/
-  web/                 # Nuxt reference app (Phase 4–5)
-  desktop/             # Tauri 2 shell (Phase 9)
-packages/
-  core/                # Domain model (no Cloudflare/Vue)
-  cloudflare/          # D1, R2, DO, transports
-  server/              # Framework server services
-  nuxt/                # Nuxt module + composables
-  ui/                  # Theme-agnostic Vue primitives
-  theme/               # Default visual tokens
-  api-client/          # Typed HTTP client
-  types/               # Shared TypeScript types
-workers/
-  email-receiver/      # Inbound Email Worker (Phase 2)
-examples/
-  default-mail/        # Compose packages without the default theme
-docs/                  # Architecture and deployment docs
-infra/                 # Wrangler configs + D1 migrations (Phase 1+)
-tooling/               # Shared TS / ESLint / Vitest config
-```
-
-## Requirements
-
-- Node.js 22+
-- [pnpm](https://pnpm.io) 10+
-
-## Local development
+## Quick start (local)
 
 ```bash
 pnpm install
 pnpm db:migrate
 pnpm db:seed
-pnpm fixtures:check
-pnpm typecheck
-pnpm lint
-pnpm test
+pnpm dev:api    # http://127.0.0.1:8787
+pnpm dev:web    # http://127.0.0.1:3000
 ```
 
-You do not need a real domain for local development. Details:
-[docs/local-development.md](./docs/local-development.md).
+Sign in: `owner@example.com` / `owner-dev-password`  
+No real domain required for local work. See [docs/local-development.md](./docs/local-development.md).
+
+## Deploy to Cloudflare
+
+End-to-end hosting (D1, R2, Workers, custom domains, Email Routing / Sending):
+
+→ **[docs/deploy.md](./docs/deploy.md)**
+
+Short version:
+
+```bash
+cp config/deploy.example.env config/deploy.local.env   # edit your values
+pnpm deploy:configure
+# wrangler secret put INGEST_HMAC_SECRET / BLOB_SIGNING_SECRET (see deploy.md)
+pnpm db:migrate:remote && pnpm db:seed:remote
+pnpm deploy:api && pnpm deploy:web
+```
+
+Secrets and personal hostnames stay in **gitignored** files. Do not commit
+`config/deploy.local.env`, `*.wrangler.deploy.jsonc`, or production seed SQL.
+
+## Monorepo map
+
+```
+apps/web                 Nuxt reference UI
+apps/desktop             Tauri 2 shell
+packages/*               core, cloudflare, server, nuxt, ui, theme, api-client
+workers/api              HTTP API Worker
+workers/email-receiver   Inbound Email Worker
+infra/                   D1 migrations + seed
+config/                  deploy.example.env (copy → deploy.local.env)
+docs/                    Architecture + deploy guides
+```
+
+## Status
+
+Phases 0–10 implemented (through mobile push). Phase 11 will add CLI provisioning;
+until then use [docs/deploy.md](./docs/deploy.md).
 
 ## Documentation
 
-See [docs/](./docs/README.md). Product and roadmap: [CURSOR_MASTER_PROMPT.md](./CURSOR_MASTER_PROMPT.md).
+| Doc | Topic |
+| --- | --- |
+| [docs/deploy.md](./docs/deploy.md) | **Production Cloudflare setup** |
+| [docs/local-development.md](./docs/local-development.md) | Local D1 / fixtures |
+| [docs/README.md](./docs/README.md) | Full doc index |
+| [CURSOR_MASTER_PROMPT.md](./CURSOR_MASTER_PROMPT.md) | Product / roadmap |
 
 ## License
 
