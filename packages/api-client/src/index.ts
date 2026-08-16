@@ -77,6 +77,51 @@ export type MessageDetailDto = {
   bodyText: string | null;
 };
 
+export type SearchHitDto = {
+  message: MessageDto;
+  thread: ThreadDto;
+  rank: number | null;
+};
+
+export type DraftDto = {
+  id: string;
+  mailboxId: string;
+  threadId: string | null;
+  toJson: string;
+  ccJson: string;
+  bccJson: string;
+  subject: string | null;
+  bodyText: string | null;
+  bodyHtml: string | null;
+  inReplyToMessageId: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type DraftAttachmentDto = {
+  id: string;
+  draftId: string;
+  filename: string;
+  contentType: string;
+  sizeBytes: number;
+  checksum: string;
+  r2Key: string;
+  createdAt: string;
+};
+
+export type SearchQuery = {
+  q?: string | null;
+  from?: string | null;
+  to?: string | null;
+  subject?: string | null;
+  after?: string | null;
+  before?: string | null;
+  unread?: boolean | null;
+  hasAttachment?: boolean | null;
+  label?: string | null;
+  limit?: number;
+};
+
 export type MailApiClientOptions = {
   baseUrl: string;
   /** Temporary Phase 3/4 identity until Phase 8 sessions. */
@@ -157,6 +202,88 @@ export function createMailApiClient(options: MailApiClientOptions) {
       ),
     getMessage: (id: string) =>
       request<MessageDetailDto>(`/api/messages/${encodeURIComponent(id)}`),
+    searchMailbox: (mailboxId: string, query: SearchQuery = {}) => {
+      const params = new URLSearchParams();
+      if (query.q) params.set('q', query.q);
+      if (query.from) params.set('from', query.from);
+      if (query.to) params.set('to', query.to);
+      if (query.subject) params.set('subject', query.subject);
+      if (query.after) params.set('after', query.after);
+      if (query.before) params.set('before', query.before);
+      if (query.unread != null) params.set('unread', query.unread ? '1' : '0');
+      if (query.hasAttachment != null) {
+        params.set('hasAttachment', query.hasAttachment ? '1' : '0');
+      }
+      if (query.label) params.set('label', query.label);
+      if (query.limit) params.set('limit', String(query.limit));
+      const qs = params.toString();
+      return request<{ hits: SearchHitDto[] }>(
+        `/api/mailboxes/${encodeURIComponent(mailboxId)}/search${qs ? `?${qs}` : ''}`,
+      );
+    },
+    createAttachmentDownloadUrl: (attachmentId: string) =>
+      request<{ url: string; expiresAt: string }>(
+        `/api/attachments/${encodeURIComponent(attachmentId)}/url`,
+        { method: 'POST' },
+      ),
+    listDrafts: (mailboxId: string) =>
+      request<{ drafts: DraftDto[] }>(
+        `/api/mailboxes/${encodeURIComponent(mailboxId)}/drafts`,
+      ),
+    listDraftAttachments: (draftId: string) =>
+      request<{ attachments: DraftAttachmentDto[] }>(
+        `/api/drafts/${encodeURIComponent(draftId)}/attachments`,
+      ),
+    uploadDraftAttachment: async (
+      draftId: string,
+      file: { filename: string; contentType: string; bytes: ArrayBuffer | Uint8Array },
+    ) => {
+      const userId = options.getUserId();
+      const headers = new Headers();
+      headers.set('accept', 'application/json');
+      headers.set('content-type', file.contentType || 'application/octet-stream');
+      headers.set('x-yfm-filename', file.filename);
+      if (userId) headers.set('x-yfm-user-id', userId);
+      const body =
+        file.bytes instanceof ArrayBuffer
+          ? file.bytes
+          : file.bytes.buffer.slice(
+              file.bytes.byteOffset,
+              file.bytes.byteOffset + file.bytes.byteLength,
+            );
+      const response = await fetchImpl(
+        new URL(`/api/drafts/${encodeURIComponent(draftId)}/attachments`, options.baseUrl),
+        {
+          method: 'POST',
+          headers,
+          body: body as ArrayBuffer,
+        },
+      );
+      const text = await response.text();
+      let data: unknown = null;
+      if (text) {
+        try {
+          data = JSON.parse(text);
+        } catch {
+          data = text;
+        }
+      }
+      if (!response.ok) {
+        throw new MailApiError(
+          typeof data === 'object' && data && 'message' in data
+            ? String((data as { message: unknown }).message)
+            : `Request failed (${response.status})`,
+          response.status,
+          data,
+        );
+      }
+      return data as { attachment: DraftAttachmentDto };
+    },
+    createDraftAttachmentDownloadUrl: (attachmentId: string) =>
+      request<{ url: string; expiresAt: string }>(
+        `/api/draft-attachments/${encodeURIComponent(attachmentId)}/url`,
+        { method: 'POST' },
+      ),
   };
 }
 

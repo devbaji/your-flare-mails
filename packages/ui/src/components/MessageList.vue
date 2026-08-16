@@ -6,6 +6,7 @@ export type MessageListItem = {
   subject: string | null;
   date: string;
   snippet?: string | null;
+  hasAttachments?: boolean;
 };
 
 defineProps<{
@@ -30,7 +31,10 @@ defineEmits<{
     >
       <strong>{{ message.fromName || message.fromAddress }}</strong>
       <span>{{ new Date(message.date).toLocaleString() }}</span>
-      <p>{{ message.subject || '(no subject)' }}</p>
+      <p>
+        {{ message.subject || '(no subject)' }}
+        <em v-if="message.hasAttachments" class="yfm-message-list__clip"> · file</em>
+      </p>
     </button>
   </div>
 </template>

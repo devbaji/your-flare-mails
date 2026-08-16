@@ -11,3 +11,5 @@ export * from './services/mailbox-service.js';
 export * from './services/thread-service.js';
 export * from './services/message-service.js';
 export * from './services/attachment-service.js';
+export * from './services/search-service.js';
+export * from './services/draft-service.js';

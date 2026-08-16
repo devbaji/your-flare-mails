@@ -24,6 +24,14 @@ export class NotFoundError extends Error {
   }
 }
 
+export class ValidationError extends Error {
+  readonly code = 'validation_error';
+  constructor(message = 'invalid request') {
+    super(message);
+    this.name = 'ValidationError';
+  }
+}
+
 export async function requireMailboxAccess(
   db: D1Queryable,
   ctx: AuthContext,

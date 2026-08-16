@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 
 import { sanitizeEmailHtml } from '../sanitize.js';
+import AttachmentList, { type AttachmentListItem } from './AttachmentList.vue';
 
 const props = defineProps<{
   fromName?: string | null;
@@ -10,6 +11,12 @@ const props = defineProps<{
   date: string;
   bodyText?: string | null;
   bodyHtml?: string | null;
+  attachments?: AttachmentListItem[];
+  downloadingId?: string | null;
+}>();
+
+defineEmits<{
+  downloadAttachment: [attachmentId: string];
 }>();
 
 const safeHtml = computed(() =>
@@ -38,6 +45,13 @@ const safeHtml = computed(() =>
     />
     <pre v-else-if="bodyText" class="yfm-viewer__text">{{ bodyText }}</pre>
     <p v-else class="yfm-viewer__empty">No message body</p>
+
+    <AttachmentList
+      v-if="attachments?.length"
+      :attachments="attachments"
+      :downloading-id="downloadingId"
+      @download="$emit('downloadAttachment', $event)"
+    />
   </article>
 </template>
 

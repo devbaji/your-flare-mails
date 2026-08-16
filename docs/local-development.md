@@ -106,6 +106,9 @@ pnpm dev:api
 pnpm dev:web
 ```
 
+`pnpm db:seed` also uploads the seed invoice PDF into local R2 (production +
+preview bucket names) so attachment download works against `wrangler dev`.
+
 ## Verify
 
 ```bash

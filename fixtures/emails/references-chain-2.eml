@@ -1,0 +1,11 @@
+From: hello@example.com
+To: bob@example.com
+Message-ID: <refs-chain-2@mail.example.com>
+In-Reply-To: <refs-chain-1@mail.example.com>
+References: <refs-chain-1@mail.example.com>
+Subject: Re: References chain
+Date: Tue, 06 Jan 2026 10:00:00 +0000
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+Second hop with In-Reply-To.

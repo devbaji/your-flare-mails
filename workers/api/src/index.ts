@@ -6,16 +6,24 @@ import {
 import {
   AuthorizationError,
   NotFoundError,
+  ValidationError,
   createAttachmentDownloadUrl,
+  createDraftAttachmentDownloadUrl,
   getAttachment,
+  getDraft,
   getMailbox,
   getMessage,
   getThread,
   ingestEmail,
+  listDraftAttachments,
+  listDrafts,
   listMailboxes,
   listThreadMessages,
   listThreads,
   openAttachmentContent,
+  openDraftAttachmentContent,
+  searchMessages,
+  uploadDraftAttachment,
   type AuthContext,
 } from '@your-flare-mails/server';
 
@@ -44,6 +52,9 @@ function errorResponse(error: unknown): Response {
   if (error instanceof NotFoundError) {
     return json({ error: error.code, message: error.message }, 404);
   }
+  if (error instanceof ValidationError) {
+    return json({ error: error.code, message: error.message }, 400);
+  }
   console.error(error);
   return json({ error: 'internal_error' }, 500);
 }
@@ -62,11 +73,24 @@ function requireAuth(request: Request): AuthContext | Response {
   return { userId };
 }
 
-function match(
-  pathname: string,
-  pattern: RegExp,
-): RegExpMatchArray | null {
+function match(pathname: string, pattern: RegExp): RegExpMatchArray | null {
   return pathname.match(pattern);
+}
+
+function parseBooleanParam(value: string | null): boolean | null {
+  if (value == null || value === '') return null;
+  if (value === '1' || value.toLowerCase() === 'true') return true;
+  if (value === '0' || value.toLowerCase() === 'false') return false;
+  return null;
+}
+
+function blobDeps(env: Env, publicBaseUrl: string) {
+  return {
+    db: env.DB,
+    r2: env.ATTACHMENTS,
+    blobSigningSecret: env.INGEST_HMAC_SECRET,
+    publicBaseUrl,
+  };
 }
 
 export default {
@@ -129,12 +153,34 @@ export default {
       const token = url.searchParams.get('token') ?? '';
       try {
         const file = await openAttachmentContent(
-          {
-            db: env.DB,
-            r2: env.ATTACHMENTS,
-            blobSigningSecret: env.INGEST_HMAC_SECRET,
-            publicBaseUrl,
+          blobDeps(env, publicBaseUrl),
+          attachmentId,
+          token,
+        );
+        return new Response(file.body, {
+          status: 200,
+          headers: {
+            'content-type': file.contentType,
+            'content-length': String(file.size),
+            'content-disposition': `attachment; filename="${file.filename.replace(/"/g, '')}"`,
+            'cache-control': 'private, max-age=60',
           },
+        });
+      } catch (error) {
+        return errorResponse(error);
+      }
+    }
+
+    const draftContentMatch = match(
+      pathname,
+      /^\/api\/draft-attachments\/([^/]+)\/content$/,
+    );
+    if (request.method === 'GET' && draftContentMatch) {
+      const attachmentId = draftContentMatch[1]!;
+      const token = url.searchParams.get('token') ?? '';
+      try {
+        const file = await openDraftAttachmentContent(
+          blobDeps(env, publicBaseUrl),
           attachmentId,
           token,
         );
@@ -179,6 +225,31 @@ export default {
         return json({ threads });
       }
 
+      const searchMatch = match(pathname, /^\/api\/mailboxes\/([^/]+)\/search$/);
+      if (request.method === 'GET' && searchMatch) {
+        const result = await searchMessages(deps, ctx, {
+          mailboxId: searchMatch[1]!,
+          q: url.searchParams.get('q'),
+          from: url.searchParams.get('from'),
+          to: url.searchParams.get('to'),
+          subject: url.searchParams.get('subject'),
+          after: url.searchParams.get('after'),
+          before: url.searchParams.get('before'),
+          unread: parseBooleanParam(url.searchParams.get('unread')),
+          hasAttachment: parseBooleanParam(url.searchParams.get('hasAttachment')),
+          labelSlug: url.searchParams.get('label'),
+          limit: Number(url.searchParams.get('limit') ?? 25),
+        });
+        return json(result);
+      }
+
+      const draftsMatch = match(pathname, /^\/api\/mailboxes\/([^/]+)\/drafts$/);
+      if (request.method === 'GET' && draftsMatch) {
+        return json({
+          drafts: await listDrafts(deps, ctx, draftsMatch[1]!),
+        });
+      }
+
       const threadMatch = match(pathname, /^\/api\/threads\/([^/]+)$/);
       if (request.method === 'GET' && threadMatch) {
         return json({ thread: await getThread(deps, ctx, threadMatch[1]!) });
@@ -199,16 +270,46 @@ export default {
         return json(await getMessage(deps, ctx, messageMatch[1]!));
       }
 
+      const draftMatch = match(pathname, /^\/api\/drafts\/([^/]+)$/);
+      if (request.method === 'GET' && draftMatch) {
+        return json({ draft: await getDraft(deps, ctx, draftMatch[1]!) });
+      }
+
+      const draftAttachmentsMatch = match(
+        pathname,
+        /^\/api\/drafts\/([^/]+)\/attachments$/,
+      );
+      if (draftAttachmentsMatch) {
+        const draftId = draftAttachmentsMatch[1]!;
+        if (request.method === 'GET') {
+          return json({
+            attachments: await listDraftAttachments(deps, ctx, draftId),
+          });
+        }
+        if (request.method === 'POST') {
+          const filename =
+            request.headers.get('x-yfm-filename')?.trim() ||
+            url.searchParams.get('filename') ||
+            'attachment';
+          const contentType =
+            request.headers.get('content-type')?.split(';')[0]?.trim() ||
+            'application/octet-stream';
+          const buffer = new Uint8Array(await request.arrayBuffer());
+          const attachment = await uploadDraftAttachment(
+            blobDeps(env, publicBaseUrl),
+            ctx,
+            draftId,
+            { filename, contentType, bytes: buffer },
+          );
+          return json({ attachment }, 201);
+        }
+      }
+
       const attachmentMatch = match(pathname, /^\/api\/attachments\/([^/]+)$/);
       if (request.method === 'GET' && attachmentMatch) {
         return json({
           attachment: await getAttachment(
-            {
-              db: env.DB,
-              r2: env.ATTACHMENTS,
-              blobSigningSecret: env.INGEST_HMAC_SECRET,
-              publicBaseUrl,
-            },
+            blobDeps(env, publicBaseUrl),
             ctx,
             attachmentMatch[1]!,
           ),
@@ -222,14 +323,23 @@ export default {
       if (request.method === 'POST' && attachmentUrlMatch) {
         return json(
           await createAttachmentDownloadUrl(
-            {
-              db: env.DB,
-              r2: env.ATTACHMENTS,
-              blobSigningSecret: env.INGEST_HMAC_SECRET,
-              publicBaseUrl,
-            },
+            blobDeps(env, publicBaseUrl),
             ctx,
             attachmentUrlMatch[1]!,
+          ),
+        );
+      }
+
+      const draftAttachmentUrlMatch = match(
+        pathname,
+        /^\/api\/draft-attachments\/([^/]+)\/url$/,
+      );
+      if (request.method === 'POST' && draftAttachmentUrlMatch) {
+        return json(
+          await createDraftAttachmentDownloadUrl(
+            blobDeps(env, publicBaseUrl),
+            ctx,
+            draftAttachmentUrlMatch[1]!,
           ),
         );
       }

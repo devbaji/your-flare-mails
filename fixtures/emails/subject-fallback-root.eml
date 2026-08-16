@@ -1,0 +1,9 @@
+From: alice@example.com
+To: hello@example.com
+Message-ID: <subject-fallback-root@mail.example.com>
+Subject: Weekend plans
+Date: Mon, 05 Jan 2026 09:00:00 +0000
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+Root message for subject/participant fallback tests.

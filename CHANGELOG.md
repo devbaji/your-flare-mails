@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Phase 5 threading/search/attachments: subject/participant thread fallback with
+  fixtures, FTS5 BM25 search API + `useMailSearch` UI, message attachment download,
+  draft attachment upload (`draft_attachments`), and local R2 seed for the invoice
+  PDF.
 - Phase 4 Nuxt reference UI: `@your-flare-mails/theme` tokens (light/dark),
   `@your-flare-mails/ui` primitives, Nuxt module composables, typed API client,
   and read-only mailbox view in `apps/web` (`pnpm dev:web`).

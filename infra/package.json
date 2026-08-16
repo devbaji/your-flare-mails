@@ -6,10 +6,11 @@
   "description": "Wrangler config, D1 migrations, and local seed for YourFlareMails",
   "scripts": {
     "db:migrate": "wrangler d1 migrations apply your-flare-mails --local --config wrangler.jsonc",
-    "db:seed": "wrangler d1 execute your-flare-mails --local --config wrangler.jsonc --file=./seed/seed.sql",
+    "db:seed": "wrangler d1 execute your-flare-mails --local --config wrangler.jsonc --file=./seed/seed.sql && node ./scripts/seed-r2.mjs",
     "db:reset": "rm -rf .wrangler/state && pnpm run db:migrate && pnpm run db:seed",
     "fixtures:check": "node ./scripts/check-fixtures.mjs",
-    "ingest:fixture": "tsx ./scripts/inject-fixture.ts"
+    "ingest:fixture": "tsx ./scripts/inject-fixture.ts",
+    "seed:r2": "node ./scripts/seed-r2.mjs"
   },
   "dependencies": {
     "@your-flare-mails/cloudflare": "workspace:*",

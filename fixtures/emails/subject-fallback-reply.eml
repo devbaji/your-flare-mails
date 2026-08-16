@@ -1,0 +1,8 @@
+From: hello@example.com
+To: alice@example.com
+Subject: Re: Weekend plans
+Date: Mon, 05 Jan 2026 10:00:00 +0000
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+Reply without In-Reply-To or References — should join via subject/participant fallback.

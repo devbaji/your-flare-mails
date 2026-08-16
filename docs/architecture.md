@@ -39,7 +39,9 @@ anything from Vue or Nuxt.
   [inbound-email.md](./inbound-email.md))
 - **Mailbox APIs:** repositories in `packages/cloudflare`, services in
   `packages/server`, HTTP on `workers/api` (see [mailbox-apis.md](./mailbox-apis.md))
-- **Attachments:** private R2; short-lived HMAC download tokens (never public bucket URLs)
+- **Attachments:** private R2; short-lived HMAC download tokens (never public bucket URLs).
+  Draft uploads land in `draft_attachments` (Phase 5); compose UI is Phase 6.
+- **Search:** D1 FTS5 + BM25 via triggers; see [search.md](./search.md)
 - **Outbound:** `MailTransport` → Cloudflare Email Sending (Phase 6)
 - **Realtime:** per-mailbox Durable Object / WebSocket Hibernation (Phase 7)
 

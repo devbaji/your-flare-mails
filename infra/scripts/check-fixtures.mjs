@@ -15,6 +15,11 @@ const REQUIRED = [
   'malformed-mime.eml',
   'malicious-html.eml',
   'oversized-marker.eml',
+  'subject-fallback-root.eml',
+  'subject-fallback-reply.eml',
+  'references-chain-1.eml',
+  'references-chain-2.eml',
+  'references-chain-3.eml',
 ];
 
 function assertHasHeader(raw, name, file) {

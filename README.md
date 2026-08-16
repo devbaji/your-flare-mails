@@ -6,14 +6,15 @@ real, self-hosted email mailbox on a domain you manage through Cloudflare
 
 ## Status
 
-**Phase 4 — Web UI skeleton.** Nuxt reference app with theme tokens, UI primitives,
-and read-only mailbox browsing against the Phase 3 API.
+**Phase 5 — Threading, attachments, search.** Subject/participant thread fallback,
+FTS5 search API + UI, attachment download in the reference app, and draft
+attachment upload (compose UI still Phase 6).
 
 ## Monorepo map
 
 ```
 apps/
-  web/                 # Nuxt reference app (Phase 4)
+  web/                 # Nuxt reference app (Phase 4–5)
   desktop/             # Tauri 2 shell (Phase 9)
 packages/
   core/                # Domain model (no Cloudflare/Vue)

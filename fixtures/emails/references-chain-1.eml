@@ -1,0 +1,9 @@
+From: bob@example.com
+To: hello@example.com
+Message-ID: <refs-chain-1@mail.example.com>
+Subject: References chain
+Date: Tue, 06 Jan 2026 09:00:00 +0000
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+First message in a References-only threading chain.

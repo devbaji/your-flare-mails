@@ -4,8 +4,23 @@ import {
 } from '@your-flare-mails/core';
 
 import type { D1Queryable } from '../db.js';
+import {
+  THREAD_FALLBACK_WINDOW_MS,
+  extractMessageIds,
+  matchThreadFallback,
+  type ThreadFallbackCandidate,
+} from './threading.js';
 
 export type { D1Queryable } from '../db.js';
+export {
+  THREAD_FALLBACK_WINDOW_MS,
+  buildFtsMatchQuery,
+  collectParticipantAddresses,
+  extractMessageIds,
+  matchThreadFallback,
+  normalizeSubjectForThreading,
+  participantsOverlap,
+} from './threading.js';
 
 export type MailboxRow = {
   id: string;
@@ -34,35 +49,29 @@ export type CreateMessageInput = {
   labelInboxId: string | null;
 };
 
-function utf8Bytes(value: string): number {
-  return new TextEncoder().encode(value).byteLength;
-}
-
+/**
+ * Bodies larger than BODY_INLINE_MAX_BYTES still store a truncated searchable
+ * prefix inline (for FTS5) while the full text goes to R2.
+ */
 export function splitBodyForStorage(text: string | null): {
   bodyText: string | null;
   bodyTextR2KeyNeeded: boolean;
 } {
   if (text == null) return { bodyText: null, bodyTextR2KeyNeeded: false };
-  if (utf8Bytes(text) > BODY_INLINE_MAX_BYTES) {
-    return { bodyText: null, bodyTextR2KeyNeeded: true };
+  const bytes = new TextEncoder().encode(text);
+  if (bytes.byteLength <= BODY_INLINE_MAX_BYTES) {
+    return { bodyText: text, bodyTextR2KeyNeeded: false };
   }
-  return { bodyText: text, bodyTextR2KeyNeeded: false };
+  let end = BODY_INLINE_MAX_BYTES;
+  while (end > 0 && (bytes[end]! & 0xc0) === 0x80) end -= 1;
+  return {
+    bodyText: new TextDecoder().decode(bytes.subarray(0, end)),
+    bodyTextR2KeyNeeded: true,
+  };
 }
 
 export function newId(prefix: string): string {
   return `${prefix}_${crypto.randomUUID().replace(/-/g, '')}`;
-}
-
-export function extractMessageIds(header: string | null | undefined): string[] {
-  if (!header?.trim()) return [];
-  const matches = header.match(/<[^>]+>/g);
-  if (matches?.length) {
-    return matches.map((m) => m.trim());
-  }
-  return header
-    .split(/\s+/)
-    .map((part) => part.trim())
-    .filter(Boolean);
 }
 
 export class D1IngestRepository {
@@ -114,23 +123,75 @@ export class D1IngestRepository {
     return row?.id ?? null;
   }
 
+  async listRecentThreadFallbackCandidates(
+    mailboxId: string,
+    sinceIso: string,
+    limit = 50,
+  ): Promise<ThreadFallbackCandidate[]> {
+    const result = await this.db
+      .prepare(
+        `SELECT
+           t.id AS threadId,
+           t.subject AS subject,
+           m.from_address AS fromAddress,
+           m.recipients_text AS recipientsText,
+           t.last_message_at AS lastMessageAt
+         FROM threads t
+         JOIN messages m ON m.id = (
+           SELECT id FROM messages
+           WHERE thread_id = t.id
+           ORDER BY date DESC
+           LIMIT 1
+         )
+         WHERE t.mailbox_id = ?
+           AND (t.last_message_at IS NULL OR t.last_message_at >= ?)
+         ORDER BY t.last_message_at DESC
+         LIMIT ?`,
+      )
+      .bind(mailboxId, sinceIso, limit)
+      .all<ThreadFallbackCandidate>();
+    return result.results;
+  }
+
+  /**
+   * Resolve thread for an inbound message:
+   * 1. Match In-Reply-To Message-IDs in this mailbox
+   * 2. Else walk References newest → oldest
+   * 3. Else subject/participant fallback within THREAD_FALLBACK_WINDOW_MS
+   * 4. Else create a new thread
+   */
   async resolveThreadId(
     mailboxId: string,
     email: NormalizedInboundEmail,
-  ): Promise<{ threadId: string; created: boolean }> {
-    const candidates = [
+    nowMs = Date.now(),
+  ): Promise<{ threadId: string; created: boolean; via: 'header' | 'fallback' | 'new' }> {
+    const headerCandidates = [
       ...extractMessageIds(email.inReplyTo),
       ...extractMessageIds(email.referencesHeader).reverse(),
     ];
 
-    for (const candidate of candidates) {
+    for (const candidate of headerCandidates) {
       const existing = await this.findMessageByMessageIdHeader(mailboxId, candidate);
       if (existing) {
-        return { threadId: existing.threadId, created: false };
+        return { threadId: existing.threadId, created: false, via: 'header' };
       }
     }
 
-    return { threadId: newId('thr'), created: true };
+    const sinceIso = new Date(nowMs - THREAD_FALLBACK_WINDOW_MS).toISOString();
+    const recent = await this.listRecentThreadFallbackCandidates(mailboxId, sinceIso);
+    const fallbackId = matchThreadFallback({
+      subject: email.subject,
+      fromAddress: email.fromAddress,
+      to: email.to,
+      cc: email.cc,
+      candidates: recent,
+      nowMs,
+    });
+    if (fallbackId) {
+      return { threadId: fallbackId, created: false, via: 'fallback' };
+    }
+
+    return { threadId: newId('thr'), created: true, via: 'new' };
   }
 
   async persistInbound(input: CreateMessageInput): Promise<void> {

@@ -1,0 +1,10 @@
+From: bob@example.com
+To: hello@example.com
+Message-ID: <refs-chain-3@mail.example.com>
+References: <refs-chain-1@mail.example.com> <refs-chain-2@mail.example.com>
+Subject: Re: References chain
+Date: Tue, 06 Jan 2026 11:00:00 +0000
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+Third hop with References only (no In-Reply-To) — should walk newest→oldest.

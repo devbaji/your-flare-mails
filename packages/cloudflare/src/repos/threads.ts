@@ -14,7 +14,7 @@ type ThreadRow = {
   updated_at: string;
 };
 
-function mapThread(row: ThreadRow): Thread {
+export function mapThread(row: ThreadRow): Thread {
   return {
     id: row.id,
     mailboxId: row.mailbox_id,
