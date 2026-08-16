@@ -1,21 +1,25 @@
 # `@your-flare-mails/email-receiver`
 
-Cloudflare Email Worker: `email()` handler parses MIME, signs an ingest request,
-and `POST`s to `/api/inbound/email`.
+Cloudflare Email Worker: `email()` handler.
 
-Optional migration backup forwarding via `send_email` is **off** by default
-(`FORWARD_BACKUP_ENABLED=false`).
+1. Optional best-effort `message.forward()` to verified Email Routing destinations
+   (`FORWARD_BACKUP_ADDRESSES`, comma-separated) — **before** reading the raw stream.
+2. Parse MIME → HMAC-signed `POST /api/inbound/email` (app mailbox / D1).
+
+Forward failures are logged and **never** skip ingest. The app is authoritative.
 
 ```bash
-# Terminal A — API
-pnpm --filter @your-flare-mails/api dev
-
-# Terminal B — email receiver (local email binding is simulated)
-pnpm --filter @your-flare-mails/email-receiver dev
+pnpm deploy:configure
+pnpm --filter @your-flare-mails/email-receiver exec wrangler secret put INGEST_HMAC_SECRET --config wrangler.deploy.jsonc
+pnpm deploy:email-receiver
 ```
 
-Prefer injecting fixtures through the API for day-to-day local testing:
+Then point Email Routing for your address at this Worker (replace any Gmail-only forwarder).
+
+Local:
 
 ```bash
+pnpm --filter @your-flare-mails/api dev
+pnpm --filter @your-flare-mails/email-receiver dev
 pnpm ingest:fixture fixtures/emails/plain-text.eml
 ```

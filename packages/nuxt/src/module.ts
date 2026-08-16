@@ -35,10 +35,17 @@ export default defineNuxtModule<YourFlareMailsModuleOptions>({
   setup(options, nuxt) {
     const resolver = createResolver(import.meta.url);
 
+    // Prefer explicit env at setup time — nuxt.config may evaluate before .env.production.local loads.
+    const apiBaseUrl =
+      process.env.NUXT_PUBLIC_API_BASE_URL?.trim() ||
+      options.apiBaseUrl ||
+      'http://127.0.0.1:8787';
+
     nuxt.options.runtimeConfig.public.yourFlareMails = {
-      apiBaseUrl: options.apiBaseUrl ?? 'http://127.0.0.1:8787',
+      apiBaseUrl,
       brandName: options.brandName ?? 'YourFlareMails',
     };
+
 
     nuxt.options.build = nuxt.options.build || {};
     nuxt.options.build.transpile = nuxt.options.build.transpile || [];

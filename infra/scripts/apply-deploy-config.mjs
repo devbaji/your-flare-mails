@@ -105,6 +105,12 @@ const receiver = {
   vars: {
     INGEST_URL: `https://${env.API_HOSTNAME}`,
     FORWARD_BACKUP_ENABLED: env.FORWARD_BACKUP_ENABLED ?? 'false',
+    ...(env.FORWARD_BACKUP_ADDRESSES
+      ? { FORWARD_BACKUP_ADDRESSES: env.FORWARD_BACKUP_ADDRESSES }
+      : {}),
+    ...(env.FORWARD_BACKUP_ADDRESS
+      ? { FORWARD_BACKUP_ADDRESS: env.FORWARD_BACKUP_ADDRESS }
+      : {}),
   },
   send_email: [{ name: 'EMAIL' }],
 };

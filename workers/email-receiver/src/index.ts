@@ -11,17 +11,16 @@ import { parseMimeToNormalizedEmail } from '@your-flare-mails/cloudflare';
 export interface Env {
   INGEST_URL: string;
   INGEST_HMAC_SECRET: string;
-  /** When "true", forward a copy via send_email (migration backup). Default off. */
+  /**
+   * When "true", best-effort forward to verified Email Routing destinations
+   * listed in FORWARD_BACKUP_ADDRESSES (comma-separated).
+   * Forwards never block or undo successful ingest.
+   */
   FORWARD_BACKUP_ENABLED?: string;
+  /** Comma-separated verified destination addresses (Email Routing). */
+  FORWARD_BACKUP_ADDRESSES?: string;
+  /** @deprecated Prefer FORWARD_BACKUP_ADDRESSES. Single address still supported. */
   FORWARD_BACKUP_ADDRESS?: string;
-  EMAIL?: {
-    send(message: {
-      to: string;
-      from: string;
-      subject: string;
-      raw?: ArrayBuffer | string;
-    }): Promise<unknown>;
-  };
 }
 
 type ForwardableEmailMessage = {
@@ -31,7 +30,21 @@ type ForwardableEmailMessage = {
   raw: ReadableStream;
   rawSize: number;
   setReject(reason: string): void;
+  /** Forward to a destination verified in Email Routing. Must run before reading `.raw`. */
+  forward(rcptTo: string, headers?: Headers): Promise<void>;
 };
+
+function parseBackupAddresses(env: Env): string[] {
+  const raw = env.FORWARD_BACKUP_ADDRESSES || env.FORWARD_BACKUP_ADDRESS || '';
+  return [
+    ...new Set(
+      raw
+        .split(',')
+        .map((s) => s.trim().toLowerCase())
+        .filter((s) => s.includes('@')),
+    ),
+  ];
+}
 
 async function postIngest(env: Env, request: IngestRequest): Promise<Response> {
   const body = JSON.stringify(request);
@@ -52,8 +65,30 @@ async function postIngest(env: Env, request: IngestRequest): Promise<Response> {
   });
 }
 
+/**
+ * Best-effort forwards to verified destinations.
+ * Must be called before reading `message.raw` (Email Routing limitation).
+ * Individual failures are logged and never thrown.
+ */
+async function forwardBackups(message: ForwardableEmailMessage, env: Env): Promise<void> {
+  if (env.FORWARD_BACKUP_ENABLED !== 'true') return;
+  const addresses = parseBackupAddresses(env);
+  if (!addresses.length) {
+    console.warn('FORWARD_BACKUP_ENABLED but no FORWARD_BACKUP_ADDRESSES configured');
+    return;
+  }
+
+  for (const address of addresses) {
+    try {
+      await message.forward(address);
+    } catch (error) {
+      console.error('backup forward failed', address, error);
+    }
+  }
+}
+
 export default {
-  async email(message: ForwardableEmailMessage, env: Env, ctx: ExecutionContext): Promise<void> {
+  async email(message: ForwardableEmailMessage, env: Env, _ctx: ExecutionContext): Promise<void> {
     try {
       if (!env.INGEST_HMAC_SECRET || !env.INGEST_URL) {
         console.error('email-receiver misconfigured: missing INGEST_URL or INGEST_HMAC_SECRET');
@@ -66,6 +101,11 @@ export default {
         return;
       }
 
+      // 1) Optional Gmail/etc backup first (must precede reading .raw).
+      //    Failures must not skip ingest — the app mailbox is authoritative.
+      await forwardBackups(message, env);
+
+      // 2) Parse + ingest into YourFlareMails (D1/R2) — always attempted after backups.
       const parsed = await parseMimeToNormalizedEmail({
         raw: message.raw,
         envelopeFrom: message.from,
@@ -75,12 +115,9 @@ export default {
 
       if (!parsed.ok) {
         console.error('MIME parse failed:', parsed.error);
-        if (parsed.reject) {
-          message.setReject(parsed.error);
-        } else {
-          // Soft-fail malformed MIME so routing does not bounce aggressively in MVP.
-          message.setReject('Unable to process message');
-        }
+        message.setReject(
+          parsed.reject ? parsed.error : 'Unable to process message',
+        );
         return;
       }
 
@@ -96,28 +133,6 @@ export default {
         console.error('ingest failed', response.status, text);
         message.setReject('Mailbox temporarily unavailable');
         return;
-      }
-
-      if (
-        env.FORWARD_BACKUP_ENABLED === 'true' &&
-        env.FORWARD_BACKUP_ADDRESS &&
-        env.EMAIL
-      ) {
-        const backupAddress = env.FORWARD_BACKUP_ADDRESS;
-        ctx.waitUntil(
-          (async () => {
-            try {
-              await env.EMAIL!.send({
-                to: backupAddress,
-                from: message.to,
-                subject: parsed.email.subject ?? '(no subject)',
-                raw: parsed.email.rawMimeBase64,
-              });
-            } catch (error) {
-              console.error('backup forward failed', error);
-            }
-          })(),
-        );
       }
     } catch (error) {
       console.error('email handler error', error);

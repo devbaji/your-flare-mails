@@ -104,8 +104,21 @@ cd ../..
 pnpm deploy:email-receiver
 ```
 
+In `config/deploy.local.env` you can enable Gmail (or other) copies:
+
+```bash
+FORWARD_BACKUP_ENABLED=true
+FORWARD_BACKUP_ADDRESSES=you@gmail.com,backup@example.com
+```
+
+Those addresses must be **verified destinations** in Email Routing. Re-run
+`pnpm deploy:configure` then `pnpm deploy:email-receiver` after changing them.
+
 Dashboard → **Email Routing** → rule for your mailbox address → **Send to a Worker**
-→ `your-flare-mails-email-receiver`.
+→ `your-flare-mails-email-receiver` (replace any Gmail-only forwarder Worker).
+
+Forwarding is best-effort and runs before ingest; if a forward fails, the message
+is still stored in YourFlareMails when ingest succeeds.
 
 ### 8. Outbound email (paid)
 

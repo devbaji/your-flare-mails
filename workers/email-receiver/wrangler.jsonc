@@ -6,11 +6,7 @@
   "vars": {
     "INGEST_URL": "http://127.0.0.1:8787",
     "INGEST_HMAC_SECRET": "dev-ingest-hmac-secret-change-me",
-    "FORWARD_BACKUP_ENABLED": "false"
-  },
-  "send_email": [
-    {
-      "name": "EMAIL"
-    }
-  ]
+    "FORWARD_BACKUP_ENABLED": "false",
+    "FORWARD_BACKUP_ADDRESSES": ""
+  }
 }

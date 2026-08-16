@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "nuxt dev --port 3000",
     "build": "nuxt build",
-    "build:production": "node -e \"const fs=require('fs');if(!fs.existsSync('.env.production.local')){console.error('Missing .env.production.local — run: pnpm deploy:configure');process.exit(1)}\" && nuxt build",
+    "build:production": "node ./scripts/build-production.mjs",
     "deploy:production": "pnpm run build:production && wrangler deploy --config wrangler.deploy.jsonc",
     "build:desktop": "YFM_DESKTOP=1 nuxt generate",
     "preview": "nuxt preview",
