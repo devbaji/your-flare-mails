@@ -1,0 +1,38 @@
+{
+  "name": "@your-flare-mails/nuxt",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Nuxt module: composables, server routes, runtime config, auto-imports",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "eslint .",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@your-flare-mails/api-client": "workspace:*",
+    "@your-flare-mails/server": "workspace:*"
+  },
+  "devDependencies": {
+    "@your-flare-mails/eslint-config": "workspace:*",
+    "@your-flare-mails/typescript-config": "workspace:*",
+    "@your-flare-mails/vitest-config": "workspace:*",
+    "eslint": "^9.33.0",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  },
+  "peerDependencies": {
+    "nuxt": "^3.0.0 || ^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "nuxt": {
+      "optional": true
+    }
+  }
+}

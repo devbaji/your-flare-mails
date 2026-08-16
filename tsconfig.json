@@ -1,0 +1,7 @@
+{
+  "extends": "@your-flare-mails/typescript-config/base.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "exclude": ["node_modules", "dist", "apps", "packages", "workers", "examples", "tooling"]
+}

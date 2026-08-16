@@ -1,0 +1,10 @@
+From: YourFlareMails <noreply@mail.example.com>
+To: Hello <hello@example.com>
+Subject: Welcome to YourFlareMails
+Message-ID: <fixture-plain-text@mail.example.com>
+Date: Fri, 02 Jan 2026 10:00:00 +0000
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+Welcome! This is a plain-text seed message for local development.

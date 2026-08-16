@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+
+# Build / framework outputs
+dist/
+build/
+.nuxt/
+.output/
+.nitro/
+.wrangler/
+infra/.wrangler/
+workers/*/.wrangler/
+.turbo/
+*.tsbuildinfo
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Test / coverage
+coverage/
+.nyc_output/
+
+# IDE / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Misc
+*.local
+.cache/
+tmp/
+temp/

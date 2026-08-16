@@ -1,0 +1,10 @@
+{
+  "extends": "@your-flare-mails/typescript-config/library.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "rootDir": ".",
+    "outDir": "dist",
+    "types": ["node"]
+  },
+  "include": ["src"]
+}

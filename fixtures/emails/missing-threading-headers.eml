@@ -1,0 +1,9 @@
+From: alice@example.com
+To: hello@example.com
+Subject: Missing threading headers
+Date: Mon, 05 Jan 2026 08:00:00 +0000
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+This message has no Message-ID, In-Reply-To, or References headers.
+Threading must fall back to subject/participants heuristics.

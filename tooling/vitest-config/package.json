@@ -1,0 +1,13 @@
+{
+  "name": "@your-flare-mails/vitest-config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared Vitest config for YourFlareMails",
+  "exports": {
+    ".": "./index.js"
+  },
+  "peerDependencies": {
+    "vitest": "^3.0.0"
+  }
+}

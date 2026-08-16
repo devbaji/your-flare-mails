@@ -1,0 +1,12 @@
+From: big@example.com
+To: hello@example.com
+Subject: Oversized body fixture marker
+Message-ID: <oversized@example.com>
+Date: Mon, 05 Jan 2026 11:00:00 +0000
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+OVERSIZED_FIXTURE_MARKER
+This fixture is intentionally small on disk. Tests that need an oversized payload
+should expand the marker line to exceed BODY_INLINE_MAX_BYTES / MAX_MESSAGE_BYTES
+rather than committing multi-megabyte blobs to git.

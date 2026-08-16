@@ -1,0 +1,29 @@
+{
+  "name": "@your-flare-mails/types",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared TypeScript types for YourFlareMails",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "eslint .",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@your-flare-mails/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@your-flare-mails/eslint-config": "workspace:*",
+    "@your-flare-mails/typescript-config": "workspace:*",
+    "@your-flare-mails/vitest-config": "workspace:*",
+    "eslint": "^9.33.0",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}

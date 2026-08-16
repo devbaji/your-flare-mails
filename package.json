@@ -1,0 +1,40 @@
+{
+  "name": "your-flare-mails",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Open-source Cloudflare-native framework for self-hosted email mailboxes",
+  "packageManager": "pnpm@10.17.1",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "typecheck": "pnpm -r --if-present run typecheck",
+    "lint": "pnpm -r --if-present run lint",
+    "test": "pnpm -r --if-present run test",
+    "build": "pnpm -r --if-present run build",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:migrate": "pnpm --filter @your-flare-mails/infra run db:migrate",
+    "db:seed": "pnpm --filter @your-flare-mails/infra run db:seed",
+    "db:reset": "pnpm --filter @your-flare-mails/infra run db:reset",
+    "fixtures:check": "pnpm --filter @your-flare-mails/infra run fixtures:check",
+    "ingest:fixture": "pnpm --filter @your-flare-mails/infra run ingest:fixture",
+    "dev:api": "pnpm --filter @your-flare-mails/api dev"
+  },
+  "devDependencies": {
+    "@your-flare-mails/eslint-config": "workspace:*",
+    "@your-flare-mails/typescript-config": "workspace:*",
+    "@your-flare-mails/vitest-config": "workspace:*",
+    "eslint": "^9.33.0",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "workerd",
+      "sharp"
+    ]
+  }
+}

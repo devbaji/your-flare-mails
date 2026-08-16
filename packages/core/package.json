@@ -1,0 +1,29 @@
+{
+  "name": "@your-flare-mails/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Email domain model, types, and Zod schemas (no Cloudflare/Vue/Nuxt)",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "zod": "^4.0.17"
+  },
+  "devDependencies": {
+    "@your-flare-mails/eslint-config": "workspace:*",
+    "@your-flare-mails/typescript-config": "workspace:*",
+    "@your-flare-mails/vitest-config": "workspace:*",
+    "eslint": "^9.33.0",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}

@@ -1,0 +1,22 @@
+From: Newsletter <news@example.com>
+To: hello@example.com
+Subject: Inline image demo
+Message-ID: <inline-image@news.example.com>
+Date: Sun, 04 Jan 2026 12:00:00 +0000
+MIME-Version: 1.0
+Content-Type: multipart/related; boundary="rel001"
+
+--rel001
+Content-Type: text/html; charset=utf-8
+
+<html><body><p>Logo:</p><img src="cid:logo@example.com" alt="logo"></body></html>
+
+--rel001
+Content-Type: image/png; name="logo.png"
+Content-Transfer-Encoding: base64
+Content-ID: <logo@example.com>
+Content-Disposition: inline; filename="logo.png"
+
+iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==
+
+--rel001--

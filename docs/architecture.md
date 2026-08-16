@@ -1,0 +1,50 @@
+# Architecture
+
+YourFlareMails is a **framework** for building email applications on Cloudflare,
+plus a polished default (reference) app that dogfoods the public APIs.
+
+## Four layers
+
+1. **Core** (`packages/core`) — email domain model, Zod schemas, fingerprinting,
+   `MailTransport` / `MockMailTransport`. No UI, no Cloudflare SDK, no Vue/Nuxt.
+2. **Framework APIs** (`packages/server`, `packages/nuxt`, `packages/api-client`) —
+   composables and server services. Framework-aware, UI-agnostic.
+3. **UI primitives** (`packages/ui`) — themeable Vue components built on the
+   framework APIs. Replaceable independently of the default theme.
+4. **Default theme / reference app** (`packages/theme`, `apps/web`) — the shipped
+   email client. Proof that layers 1–3 are sufficient on their own.
+
+Layer 4 must not leak private details into layers 1–3. Layer 1 must not import
+anything from Vue or Nuxt.
+
+## Storage (Phase 1)
+
+- **D1** holds users, domains, mailboxes, threads, messages (metadata + small
+  text bodies), recipients, labels, drafts, contacts, devices, notification
+  subscriptions, settings, and an FTS5 virtual table (`messages_fts`).
+- **R2** (local binding configured in `infra/wrangler.jsonc`) will hold
+  attachments, inline images, raw MIME, and bodies over `BODY_INLINE_MAX_BYTES`
+  (8 KiB). Persistence code lands in Phase 3; the binding exists so local Wrangler
+  state matches the intended shape.
+- FTS5 stays in sync via SQLite triggers on `messages` insert/update/delete —
+  application code must not manually maintain the index.
+- Required indexes include `messages(thread_id)`, `messages(mailbox_id, date)`,
+  and `messages(message_id_header)` for thread views, mailbox lists, and
+  idempotency lookups.
+
+## Platform (Cloudflare-native)
+
+- **Inbound:** Email Routing → `workers/email-receiver` → HMAC `POST /api/inbound/email`
+  on `workers/api` → `ingestEmail()` in `packages/server` (see
+  [inbound-email.md](./inbound-email.md))
+- **Outbound:** `MailTransport` → Cloudflare Email Sending (Phase 6)
+- **Realtime:** per-mailbox Durable Object / WebSocket Hibernation (Phase 7)
+
+## Domain model
+
+Canonical Zod schemas live in `@your-flare-mails/core`. Shared entity TypeScript
+types are re-exported from `@your-flare-mails/types` for consumers that prefer a
+types-only import path.
+
+Message idempotency uses `computeMessageFingerprint()` (Message-ID + envelope
+recipients, with a content-hash fallback).

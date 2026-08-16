@@ -1,0 +1,24 @@
+{
+  "$schema": "../../infra/node_modules/wrangler/config-schema.json",
+  "name": "your-flare-mails-api",
+  "compatibility_date": "2026-08-01",
+  "main": "src/index.ts",
+  "vars": {
+    "INGEST_HMAC_SECRET": "dev-ingest-hmac-secret-change-me"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "your-flare-mails",
+      "database_id": "00000000-0000-0000-0000-000000000001",
+      "migrations_dir": "../../infra/migrations"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "ATTACHMENTS",
+      "bucket_name": "your-flare-mails-attachments",
+      "preview_bucket_name": "your-flare-mails-attachments-preview"
+    }
+  ]
+}

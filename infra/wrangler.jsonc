@@ -1,0 +1,21 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "your-flare-mails-infra",
+  "compatibility_date": "2026-08-01",
+  "main": "worker-stub.ts",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "your-flare-mails",
+      "database_id": "00000000-0000-0000-0000-000000000001",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "ATTACHMENTS",
+      "bucket_name": "your-flare-mails-attachments",
+      "preview_bucket_name": "your-flare-mails-attachments-preview"
+    }
+  ]
+}

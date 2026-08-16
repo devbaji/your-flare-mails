@@ -1,0 +1,36 @@
+From: Billing <billing@example.com>
+To: hello@example.com
+Subject: Invoice #1042 attached
+Message-ID: <fixture-invoice-1042@billing.example.com>
+Date: Sat, 03 Jan 2026 15:30:00 +0000
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="mixed1042"
+
+--mixed1042
+Content-Type: multipart/alternative; boundary="alt1042"
+
+--alt1042
+Content-Type: text/plain; charset=utf-8
+
+Please find the invoice attached.
+
+--alt1042
+Content-Type: text/html; charset=utf-8
+
+<html><body><p>Please find the <strong>invoice</strong> attached.</p></body></html>
+
+--alt1042--
+
+--mixed1042
+Content-Type: application/pdf; name="invoice-1042.pdf"
+Content-Disposition: attachment; filename="invoice-1042.pdf"
+Content-Transfer-Encoding: base64
+
+JVBERi0xLjAKJcKlwrHDov4KMSAwIG9iago8PC9UeXBlL0NhdGFsb2cvUGFnZXMgMiAwIFI+Pgpl
+bmRvYmoKMiAwIG9iago8PC9UeXBlL1BhZ2VzL0NvdW50IDEvS2lkc1szIDAgUl0+PgplbmRvYmoK
+MyAwIG9iago8PC9UeXBlL1BhZ2UvTWVkaWFCb3hbMCAwIDIwMCAyMDBdL1BhcmVudCAyIDAgUj4+
+CmVuZG9iagp4cmVmCjAgNAowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMTUgMDAwMDAgbiAK
+MDAwMDAwMDA2OCAwMDAwMCBuIAowMDAwMDAwMTIxIDAwMDAwIG4gCnRyYWlsZXIKPDwvU2l6ZSA0
+L1Jvb3QgMSAwIFI+PgpzdGFydHhyZWYKMjA0CiUlRU9GCg==
+
+--mixed1042--

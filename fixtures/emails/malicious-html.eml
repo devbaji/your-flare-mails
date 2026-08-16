@@ -1,0 +1,26 @@
+From: tracker@example.com
+To: hello@example.com
+Subject: Malicious HTML patterns
+Message-ID: <evil-html@example.com>
+Date: Mon, 05 Jan 2026 10:00:00 +0000
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="evil"
+
+--evil
+Content-Type: text/plain; charset=utf-8
+
+Please view the HTML version.
+
+--evil
+Content-Type: text/html; charset=utf-8
+
+<html>
+  <body onload="alert('xss')">
+    <script>document.cookie</script>
+    <img src="https://tracker.example.com/pixel.gif" width="1" height="1" alt="">
+    <a href="javascript:alert(1)">click</a>
+    <div onclick="fetch('https://evil.example.com')">Hover me</div>
+  </body>
+</html>
+
+--evil--

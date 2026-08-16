@@ -1,0 +1,24 @@
+{
+  "name": "@your-flare-mails/example-default-mail",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Minimal example composing packages/* without the default theme",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "eslint .",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@your-flare-mails/core": "workspace:*",
+    "@your-flare-mails/server": "workspace:*"
+  },
+  "devDependencies": {
+    "@your-flare-mails/eslint-config": "workspace:*",
+    "@your-flare-mails/typescript-config": "workspace:*",
+    "@your-flare-mails/vitest-config": "workspace:*",
+    "eslint": "^9.33.0",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}

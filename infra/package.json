@@ -1,0 +1,22 @@
+{
+  "name": "@your-flare-mails/infra",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Wrangler config, D1 migrations, and local seed for YourFlareMails",
+  "scripts": {
+    "db:migrate": "wrangler d1 migrations apply your-flare-mails --local --config wrangler.jsonc",
+    "db:seed": "wrangler d1 execute your-flare-mails --local --config wrangler.jsonc --file=./seed/seed.sql",
+    "db:reset": "rm -rf .wrangler/state && pnpm run db:migrate && pnpm run db:seed",
+    "fixtures:check": "node ./scripts/check-fixtures.mjs",
+    "ingest:fixture": "tsx ./scripts/inject-fixture.ts"
+  },
+  "dependencies": {
+    "@your-flare-mails/cloudflare": "workspace:*",
+    "@your-flare-mails/core": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.3",
+    "wrangler": "^4.28.0"
+  }
+}
