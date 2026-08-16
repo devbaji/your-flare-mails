@@ -13,10 +13,7 @@
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint .",
-    "test": "vitest run --passWithNoTests"
-  },
-  "dependencies": {
-    "@your-flare-mails/types": "workspace:*"
+    "test": "vitest run"
   },
   "devDependencies": {
     "@your-flare-mails/eslint-config": "workspace:*",

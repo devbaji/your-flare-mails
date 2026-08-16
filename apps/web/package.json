@@ -5,21 +5,29 @@
   "type": "module",
   "description": "YourFlareMails reference Nuxt application",
   "scripts": {
-    "typecheck": "tsc --noEmit -p tsconfig.json",
-    "lint": "eslint .",
+    "dev": "nuxt dev --port 3000",
+    "build": "nuxt build",
+    "preview": "nuxt preview",
+    "typecheck": "nuxt prepare && tsc --noEmit -p tsconfig.json",
+    "lint": "eslint --ignore-pattern '**/*.vue' --ignore-pattern '.nuxt/**' --ignore-pattern '.output/**' .",
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "@your-flare-mails/nuxt": "workspace:*",
     "@your-flare-mails/theme": "workspace:*",
-    "@your-flare-mails/ui": "workspace:*"
+    "@your-flare-mails/ui": "workspace:*",
+    "nuxt": "^3.17.4",
+    "vue": "^3.5.18",
+    "vue-router": "^4.5.1"
   },
   "devDependencies": {
+    "@types/node": "^22.17.0",
     "@your-flare-mails/eslint-config": "workspace:*",
     "@your-flare-mails/typescript-config": "workspace:*",
     "@your-flare-mails/vitest-config": "workspace:*",
     "eslint": "^9.33.0",
     "typescript": "^5.9.2",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "wrangler": "^4.28.0"
   }
 }

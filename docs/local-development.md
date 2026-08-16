@@ -97,6 +97,15 @@ See [mailbox-apis.md](./mailbox-apis.md). Temporary auth header for Phase 3:
 curl -s -H 'x-yfm-user-id: user_seed_owner' http://127.0.0.1:8787/api/mailboxes
 ```
 
+## Web UI
+
+See [web-ui.md](./web-ui.md):
+
+```bash
+pnpm dev:api
+pnpm dev:web
+```
+
 ## Verify
 
 ```bash

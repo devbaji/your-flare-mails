@@ -6,6 +6,7 @@
 | [local-development.md](./local-development.md) | Phase 2–3 |
 | [inbound-email.md](./inbound-email.md) | Phase 2 |
 | [mailbox-apis.md](./mailbox-apis.md) | Phase 3 |
+| [web-ui.md](./web-ui.md) | Phase 4 |
 | Cloudflare setup | When deploying for real |
 | Deployment | Later |
 | Environment variables | See `.env.example` |

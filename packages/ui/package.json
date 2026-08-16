@@ -8,17 +8,19 @@
     ".": {
       "types": "./src/index.ts",
       "default": "./src/index.ts"
-    }
+    },
+    "./components": "./src/components.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint .",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run"
   },
   "devDependencies": {
     "@your-flare-mails/eslint-config": "workspace:*",
     "@your-flare-mails/typescript-config": "workspace:*",
     "@your-flare-mails/vitest-config": "workspace:*",
+    "@vitejs/plugin-vue": "^6.0.0",
     "eslint": "^9.33.0",
     "typescript": "^5.9.2",
     "vitest": "^3.2.4",

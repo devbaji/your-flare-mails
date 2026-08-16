@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Phase 4 Nuxt reference UI: `@your-flare-mails/theme` tokens (light/dark),
+  `@your-flare-mails/ui` primitives, Nuxt module composables, typed API client,
+  and read-only mailbox view in `apps/web` (`pnpm dev:web`).
 - Phase 3 mailbox APIs: D1 repositories, `mailbox`/`thread`/`message`/`attachment`
   services with mailbox membership checks, HMAC-signed private R2 download URLs,
   and read routes on `workers/api` (temporary `X-YFM-User-Id` until Phase 8).

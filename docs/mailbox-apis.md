@@ -1,6 +1,10 @@
 # Mailbox APIs (Phase 3)
 
-Read APIs are hosted on `workers/api` until Phase 4 moves them into Nuxt/Nitro.
+Read APIs are hosted on `workers/api`. The Nuxt reference app (`apps/web`) consumes
+them via `@your-flare-mails/api-client` and composables from `@your-flare-mails/nuxt`
+(Phase 4). Nitro may host these routes in a later consolidation; for now keep the
+API Worker running locally beside the UI.
+
 All mailbox-scoped routes require temporary identity header:
 
 ```http

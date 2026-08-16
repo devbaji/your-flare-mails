@@ -1,9 +1,3 @@
 {
-  "extends": "@your-flare-mails/typescript-config/nuxt.json",
-  "compilerOptions": {
-    "noEmit": true,
-    "rootDir": ".",
-    "outDir": "dist"
-  },
-  "include": ["src"]
+  "extends": "./.nuxt/tsconfig.json"
 }

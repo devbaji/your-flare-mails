@@ -6,9 +6,8 @@ real, self-hosted email mailbox on a domain you manage through Cloudflare
 
 ## Status
 
-**Phase 3 — Mailbox APIs.** D1 repositories, private R2 downloads via signed
-tokens, and mailbox/thread/message/attachment services are available on
-`workers/api`.
+**Phase 4 — Web UI skeleton.** Nuxt reference app with theme tokens, UI primitives,
+and read-only mailbox browsing against the Phase 3 API.
 
 ## Monorepo map
 
