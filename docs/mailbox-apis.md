@@ -3,13 +3,12 @@
 APIs are hosted on `workers/api`. The Nuxt reference app consumes them via
 `@your-flare-mails/api-client` and composables from `@your-flare-mails/nuxt`.
 
-All mailbox-scoped routes require temporary identity header:
+All mailbox-scoped routes require authentication (session Bearer/cookie or
+Cloudflare Access). See [auth.md](./auth.md).
 
 ```http
-X-YFM-User-Id: user_seed_owner
+Authorization: Bearer <sessionToken>
 ```
-
-(Seed user from `infra/seed/seed.sql`. Replaced by real sessions in Phase 8.)
 
 ## Routes
 
@@ -56,9 +55,14 @@ records metadata in `draft_attachments`. Compose UI (Phase 6) reuses this path.
 pnpm db:migrate && pnpm db:seed
 pnpm dev:api
 
-curl -s -H 'x-yfm-user-id: user_seed_owner' \
+TOKEN=$(curl -s -X POST http://127.0.0.1:8787/api/auth/login \
+  -H 'content-type: application/json' \
+  -d '{"email":"owner@example.com","password":"owner-dev-password"}' \
+  | python3 -c 'import sys,json; print(json.load(sys.stdin)["sessionToken"])')
+
+curl -s -H "authorization: Bearer $TOKEN" \
   'http://127.0.0.1:8787/api/mailboxes/mbx_seed_hello/search?q=invoice' | jq
 
-curl -s -H 'x-yfm-user-id: user_seed_owner' \
+curl -s -H "authorization: Bearer $TOKEN" \
   -X POST http://127.0.0.1:8787/api/attachments/att_seed_invoice_pdf/url | jq
 ```

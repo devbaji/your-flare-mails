@@ -46,6 +46,8 @@ anything from Vue or Nuxt.
   (see [outbound-email.md](./outbound-email.md))
 - **Realtime:** per-mailbox `MailboxRealtime` Durable Object + WebSocket
   Hibernation; poll fallback (see [realtime.md](./realtime.md))
+- **Auth:** session cookies + Bearer tokens; optional Cloudflare Access
+  (see [auth.md](./auth.md))
 
 ## Domain model
 

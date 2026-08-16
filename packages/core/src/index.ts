@@ -10,4 +10,6 @@ export * from './constants.js';
 export * from './fingerprint.js';
 export * from './hmac.js';
 export * from './mail-transport.js';
+export * from './password.js';
+export * from './session-token.js';
 export * from './schemas/index.js';

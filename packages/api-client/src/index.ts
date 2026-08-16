@@ -109,6 +109,14 @@ export type DraftAttachmentDto = {
   createdAt: string;
 };
 
+export type UserDto = {
+  id: string;
+  email: string;
+  displayName: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type SearchQuery = {
   q?: string | null;
   from?: string | null;
@@ -124,9 +132,16 @@ export type SearchQuery = {
 
 export type MailApiClientOptions = {
   baseUrl: string;
-  /** Temporary Phase 3/4 identity until Phase 8 sessions. */
-  getUserId: () => string | null | undefined;
+  /** Session token for Bearer auth (preferred for split-origin local/dev). */
+  getSessionToken?: () => string | null | undefined;
+  /** CSRF token for cookie-authenticated mutating requests. */
+  getCsrfToken?: () => string | null | undefined;
+  /**
+   * @deprecated Phase 8 — only used when API has ALLOW_DEV_USER_HEADER=true.
+   */
+  getUserId?: () => string | null | undefined;
   fetch?: typeof fetch;
+  credentials?: RequestCredentials;
 };
 
 export class MailApiError extends Error {
@@ -142,16 +157,30 @@ export class MailApiError extends Error {
 
 export function createMailApiClient(options: MailApiClientOptions) {
   const fetchImpl = options.fetch ?? fetch;
+  const credentials = options.credentials ?? 'include';
 
   async function request<T>(path: string, init?: RequestInit): Promise<T> {
-    const userId = options.getUserId();
     const headers = new Headers(init?.headers);
     headers.set('accept', 'application/json');
+
+    const sessionToken = options.getSessionToken?.();
+    if (sessionToken) {
+      headers.set('authorization', `Bearer ${sessionToken}`);
+    }
+
+    const csrf = options.getCsrfToken?.();
+    const method = (init?.method ?? 'GET').toUpperCase();
+    if (csrf && method !== 'GET' && method !== 'HEAD') {
+      headers.set('x-yfm-csrf', csrf);
+    }
+
+    const userId = options.getUserId?.();
     if (userId) headers.set('x-yfm-user-id', userId);
 
     const response = await fetchImpl(new URL(path, options.baseUrl), {
       ...init,
       headers,
+      credentials,
     });
 
     const text = await response.text();
@@ -178,6 +207,25 @@ export function createMailApiClient(options: MailApiClientOptions) {
   }
 
   return {
+    login: (email: string, password: string) =>
+      request<{
+        user: UserDto;
+        csrfToken: string;
+        expiresAt: string;
+        sessionToken: string;
+      }>('/api/auth/login', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      }),
+    logout: () =>
+      request<{ ok: boolean }>('/api/auth/logout', { method: 'POST' }),
+    me: () =>
+      request<{
+        user: UserDto;
+        via: string;
+        csrfToken: string | null;
+      }>('/api/auth/me'),
     listMailboxes: () => request<{ mailboxes: MailboxDto[] }>('/api/mailboxes'),
     getMailbox: (id: string) =>
       request<{ mailbox: MailboxDto }>(`/api/mailboxes/${encodeURIComponent(id)}`),
@@ -300,6 +348,7 @@ export function createMailApiClient(options: MailApiClientOptions) {
         ok: boolean;
         messageId: string;
         threadId: string;
+        mailboxId?: string;
         providerMessageId?: string;
         error?: string;
       }>(`/api/drafts/${encodeURIComponent(draftId)}/send`, {
@@ -315,11 +364,15 @@ export function createMailApiClient(options: MailApiClientOptions) {
       draftId: string,
       file: { filename: string; contentType: string; bytes: ArrayBuffer | Uint8Array },
     ) => {
-      const userId = options.getUserId();
       const headers = new Headers();
       headers.set('accept', 'application/json');
       headers.set('content-type', file.contentType || 'application/octet-stream');
       headers.set('x-yfm-filename', file.filename);
+      const sessionToken = options.getSessionToken?.();
+      if (sessionToken) headers.set('authorization', `Bearer ${sessionToken}`);
+      const csrf = options.getCsrfToken?.();
+      if (csrf) headers.set('x-yfm-csrf', csrf);
+      const userId = options.getUserId?.();
       if (userId) headers.set('x-yfm-user-id', userId);
       const body =
         file.bytes instanceof ArrayBuffer
@@ -334,6 +387,7 @@ export function createMailApiClient(options: MailApiClientOptions) {
           method: 'POST',
           headers,
           body: body as ArrayBuffer,
+          credentials,
         },
       );
       const text = await response.text();

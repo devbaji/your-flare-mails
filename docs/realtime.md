@@ -44,9 +44,9 @@ Wire payload to clients is usually `{ seq, event }` so poll cursors stay aligned
 
 Authorization: same mailbox membership checks as other mailbox routes.
 
-**WebSocket auth (temporary):** browsers cannot set `x-yfm-user-id` on the
-handshake. Until Phase 8 session cookies, pass `?userId=user_seed_owner` (same
-dev identity as the header). Non-browser clients may still send the header.
+**WebSocket auth:** prefer session cookie (same-origin) or
+`?access_token=<sessionToken>` (browsers cannot set `Authorization` on the
+handshake). Dev-only `?userId=` works only when `ALLOW_DEV_USER_HEADER=true`.
 
 ## Client
 
@@ -66,7 +66,7 @@ pnpm dev:api   # :8787 — only one wrangler on this port
 Poll (replace `mbx_…` from seed / list mailboxes):
 
 ```bash
-curl -s -H 'x-yfm-user-id: user_seed_owner' \
+curl -s -H "authorization: Bearer $TOKEN" \
   'http://127.0.0.1:8787/api/mailboxes/MAILBOX_ID/events/poll?since=0'
 ```
 

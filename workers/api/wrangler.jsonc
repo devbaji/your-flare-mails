@@ -5,7 +5,11 @@
   "main": "src/index.ts",
   "vars": {
     "INGEST_HMAC_SECRET": "dev-ingest-hmac-secret-change-me",
-    "FORCE_MOCK_TRANSPORT": "true"
+    "BLOB_SIGNING_SECRET": "dev-blob-signing-secret-change-me",
+    "FORCE_MOCK_TRANSPORT": "true",
+    "CORS_ORIGINS": "http://127.0.0.1:3000,http://localhost:3000",
+    "ALLOW_DEV_USER_HEADER": "false",
+    "SESSION_SECURE_COOKIES": "false"
   },
   "send_email": [
     {

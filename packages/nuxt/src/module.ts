@@ -6,10 +6,8 @@ import {
 } from '@nuxt/kit';
 
 export type YourFlareMailsModuleOptions = {
-  /** Base URL of the mailbox HTTP API (workers/api in Phase 4). */
+  /** Base URL of the mailbox HTTP API (workers/api). */
   apiBaseUrl?: string;
-  /** Temporary identity until Phase 8 sessions. */
-  userId?: string;
   brandName?: string;
 };
 
@@ -20,7 +18,6 @@ declare module '@nuxt/schema' {
   interface PublicRuntimeConfig {
     yourFlareMails: {
       apiBaseUrl: string;
-      userId: string;
       brandName: string;
     };
   }
@@ -33,7 +30,6 @@ export default defineNuxtModule<YourFlareMailsModuleOptions>({
   },
   defaults: {
     apiBaseUrl: 'http://127.0.0.1:8787',
-    userId: 'user_seed_owner',
     brandName: 'YourFlareMails',
   },
   setup(options, nuxt) {
@@ -41,7 +37,6 @@ export default defineNuxtModule<YourFlareMailsModuleOptions>({
 
     nuxt.options.runtimeConfig.public.yourFlareMails = {
       apiBaseUrl: options.apiBaseUrl ?? 'http://127.0.0.1:8787',
-      userId: options.userId ?? 'user_seed_owner',
       brandName: options.brandName ?? 'YourFlareMails',
     };
 

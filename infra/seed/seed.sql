@@ -13,6 +13,12 @@ VALUES (
   '2026-01-01T00:00:00.000Z'
 );
 
+-- Local login password: owner-dev-password (PBKDF2, fixed salt for idempotent seed)
+UPDATE users
+SET password_hash = 'pbkdf2$210000$0102030405060708090a0b0c0d0e0f10$e92b9202305881e642e8972beaf1f99899c2ff7adc8966229a2573375c85f9d3',
+    updated_at = '2026-01-01T00:00:00.000Z'
+WHERE id = 'user_seed_owner';
+
 INSERT OR IGNORE INTO domains (id, name, zone_id, created_at, updated_at)
 VALUES (
   'dom_seed_example',

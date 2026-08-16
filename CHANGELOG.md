@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Phase 8 auth: PBKDF2 passwords, D1 sessions, `POST /api/auth/login|logout` +
+  `GET /api/auth/me`, Bearer/cookie identity (replacing spoofable user headers by
+  default), CSRF on cookie mutations, ingest/login rate limits, optional
+  Cloudflare Access JWT mode, separate `BLOB_SIGNING_SECRET`, and
+  [docs/auth.md](./docs/auth.md).
 - Phase 7 realtime: per-mailbox `MailboxRealtime` Durable Object (WebSocket
   Hibernation), ingest/send fan-out, `GET …/ws` + poll fallback,
   `useRealtimeMailbox()`, and [docs/realtime.md](./docs/realtime.md).

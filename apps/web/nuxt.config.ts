@@ -9,7 +9,6 @@ export default defineNuxtConfig({
   css: ['@your-flare-mails/theme/tokens.css', '~/assets/app.css'],
   yourFlareMails: {
     apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8787',
-    userId: process.env.NUXT_PUBLIC_YFM_USER_ID || 'user_seed_owner',
     brandName: 'YourFlareMails',
   },
   nitro: {

@@ -6,8 +6,9 @@ real, self-hosted email mailbox on a domain you manage through Cloudflare
 
 ## Status
 
-**Phase 7 — Realtime.** Per-mailbox Durable Object (WebSocket Hibernation),
-ingest/send fan-out, `useRealtimeMailbox()`, and poll fallback.
+**Phase 8 — Authentication.** Session login (`owner@example.com` /
+`owner-dev-password` locally), Bearer + cookie auth, CSRF, rate limits, optional
+Cloudflare Access. See [docs/auth.md](./docs/auth.md).
 
 ## Monorepo map
 

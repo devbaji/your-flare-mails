@@ -12,13 +12,16 @@ The reference app (`apps/web`) is a Nuxt 3 application that dogfoods:
 ```bash
 pnpm db:migrate && pnpm db:seed
 pnpm dev:api    # :8787 mailbox + ingest API
-pnpm dev:web    # :3000 Nuxt UI
+pnpm dev:web    # :3000 Nuxt UI → http://127.0.0.1:3000/login
 ```
 
-Temporary identity (Phase 8 replaces this):
+Sign in with the seed user:
 
-- `NUXT_PUBLIC_YFM_USER_ID=user_seed_owner` (default)
-- `NUXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8787` (default)
+- Email: `owner@example.com`
+- Password: `owner-dev-password`
+
+The API client uses `Authorization: Bearer <sessionToken>` (and optional cookies).
+See [auth.md](./auth.md).
 
 ## Phase 5–7 capabilities
 
@@ -30,6 +33,7 @@ Temporary identity (Phase 8 replaces this):
 - **Draft attachment upload** on the Drafts label
 - **Realtime** via `useRealtimeMailbox()` (WebSocket + poll fallback; see
   [realtime.md](./realtime.md))
+- **Auth** via `useAuth()` + `/login` (sessions; see [auth.md](./auth.md))
 
 HTML bodies (when present) render in an iframe with `sandbox=""` (no scripts /
 same-origin). Plain text is preferred when only text is available.
@@ -37,5 +41,5 @@ same-origin). Plain text is preferred when only text is available.
 ## Custom UI
 
 Skip `@your-flare-mails/ui` / `@your-flare-mails/theme` and use only the Nuxt
-composables (`useMailbox`, `useThreadList`, `useThread`, `useMessage`,
+composables (`useAuth`, `useMailbox`, `useThreadList`, `useThread`, `useMessage`,
 `useMailSearch`, `useRealtimeMailbox`) against the same API.

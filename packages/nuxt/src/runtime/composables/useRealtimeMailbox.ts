@@ -81,7 +81,6 @@ export function useRealtimeMailbox(
   const config = useRuntimeConfig();
   const yfm = config.public.yourFlareMails as {
     apiBaseUrl: string;
-    userId: string;
   };
 
   const transport = useState<RealtimeTransport>(
@@ -94,6 +93,7 @@ export function useRealtimeMailbox(
   );
   const lastSeq = useState('yfm-realtime-seq', () => 0);
   const error = useState<string | null>('yfm-realtime-error', () => null);
+  const sessionToken = useState<string | null>('yfm-session-token', () => null);
 
   const socketRef = ref<WebSocket | null>(null);
   const pollTimer = ref<ReturnType<typeof setInterval> | null>(null);
@@ -187,7 +187,9 @@ export function useRealtimeMailbox(
       `/api/mailboxes/${encodeURIComponent(id)}/ws`,
       toWsBase(yfm.apiBaseUrl),
     );
-    url.searchParams.set('userId', yfm.userId);
+    if (sessionToken.value) {
+      url.searchParams.set('access_token', sessionToken.value);
+    }
 
     transport.value = 'websocket';
     const socket = new WebSocket(url.toString());

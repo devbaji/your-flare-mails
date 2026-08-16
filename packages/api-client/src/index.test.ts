@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { MailApiError, createMailApiClient } from './index.js';
 
 describe('createMailApiClient', () => {
-  it('sends the temporary user header', async () => {
+  it('sends Bearer session + CSRF on mutating requests', async () => {
     const fetchMock = vi.fn(async () =>
       new Response(JSON.stringify({ mailboxes: [] }), {
         status: 200,
@@ -13,7 +13,8 @@ describe('createMailApiClient', () => {
 
     const client = createMailApiClient({
       baseUrl: 'http://127.0.0.1:8787',
-      getUserId: () => 'user_seed_owner',
+      getSessionToken: () => 'session-token',
+      getCsrfToken: () => 'csrf-token',
       fetch: fetchMock as unknown as typeof fetch,
     });
 
@@ -21,13 +22,14 @@ describe('createMailApiClient', () => {
     expect(fetchMock).toHaveBeenCalledOnce();
     const call = fetchMock.mock.calls[0] as unknown as [RequestInfo, RequestInit?];
     const headers = new Headers(call[1]?.headers);
-    expect(headers.get('x-yfm-user-id')).toBe('user_seed_owner');
+    expect(headers.get('authorization')).toBe('Bearer session-token');
+    expect(call[1]?.credentials).toBe('include');
   });
 
   it('throws MailApiError on failure', async () => {
     const client = createMailApiClient({
       baseUrl: 'http://127.0.0.1:8787',
-      getUserId: () => 'user_seed_owner',
+      getSessionToken: () => 'session-token',
       fetch: (async () =>
         new Response(JSON.stringify({ message: 'nope' }), { status: 403 })) as typeof fetch,
     });

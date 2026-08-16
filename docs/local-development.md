@@ -70,9 +70,9 @@ not create a second `messages` row. Nonces are recorded in `ingestion_nonces`.
 - Unique nonce (`x-yfm-nonce`, also inside JSON body)
 - Constant-time signature comparison
 
-A single shared secret is acceptable for the MVP. Production should move to a
-stronger signed-request design (asymmetric keys or a Cloudflare-native
-verification primitive if available) in Phase 8.
+A single shared secret is acceptable for the MVP. Production hardening
+(dedicated `BLOB_SIGNING_SECRET`, Access service tokens / Worker bindings) is
+documented in [auth.md](./auth.md).
 
 Optional backup forwarding from the Email Worker (`FORWARD_BACKUP_ENABLED`)
 defaults to **off**.
@@ -91,10 +91,14 @@ you set `remote: true` deliberately.
 
 ## Mailbox read APIs
 
-See [mailbox-apis.md](./mailbox-apis.md). Temporary auth header for Phase 3:
+See [mailbox-apis.md](./mailbox-apis.md) and [auth.md](./auth.md):
 
 ```bash
-curl -s -H 'x-yfm-user-id: user_seed_owner' http://127.0.0.1:8787/api/mailboxes
+TOKEN=$(curl -s -X POST http://127.0.0.1:8787/api/auth/login \
+  -H 'content-type: application/json' \
+  -d '{"email":"owner@example.com","password":"owner-dev-password"}' \
+  | python3 -c 'import sys,json; print(json.load(sys.stdin)["sessionToken"])')
+curl -s -H "authorization: Bearer $TOKEN" http://127.0.0.1:8787/api/mailboxes
 ```
 
 ## Web UI

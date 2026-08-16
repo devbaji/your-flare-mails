@@ -42,4 +42,4 @@ FTS5 still indexes useful content.
 
 - Treat all MIME/HTML/attachments as untrusted.
 - HTML renders only in a sandboxed iframe in the UI (`sandbox=""`).
-- Ingest HMAC is an MVP shared secret — harden in Phase 8.
+- Ingest HMAC is an MVP shared secret — see production hardening in [auth.md](./auth.md).

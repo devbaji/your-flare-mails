@@ -5,15 +5,17 @@ export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig();
   const yfm = config.public.yourFlareMails as {
     apiBaseUrl: string;
-    userId: string;
     brandName: string;
   };
 
-  const userId = useState<string>('yfm-user-id', () => yfm.userId);
+  const sessionToken = useState<string | null>('yfm-session-token', () => null);
+  const csrfToken = useState<string | null>('yfm-csrf-token', () => null);
 
   const api = createMailApiClient({
     baseUrl: yfm.apiBaseUrl,
-    getUserId: () => userId.value,
+    getSessionToken: () => sessionToken.value,
+    getCsrfToken: () => csrfToken.value,
+    credentials: 'include',
   });
 
   return {

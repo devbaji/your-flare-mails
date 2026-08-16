@@ -12,6 +12,7 @@ import {
 
 const brandName = useRuntimeConfig().public.yourFlareMails.brandName as string;
 const api = useYfmApi();
+const { user, logout, refreshSession, isAuthenticated } = useAuth();
 
 const {
   mailboxes,
@@ -269,6 +270,11 @@ watch(realtimeEvent, async (event) => {
 });
 
 onMounted(async () => {
+  await refreshSession();
+  if (!isAuthenticated()) {
+    await navigateTo('/login');
+    return;
+  }
   await refreshMailboxes();
   await refreshThreads();
   await refreshDraftPanel();
@@ -298,6 +304,8 @@ const listThreads = computed(() =>
       <p v-if="currentMailbox" class="yfm-mail-address">{{ currentMailbox.address }}</p>
       <button type="button" class="yfm-compose-btn" @click="onComposeNew">Compose</button>
       <MailSidebar :labels="labels" :active-slug="labelSlug" @select="selectLabel" />
+      <p v-if="user" class="yfm-muted yfm-user">{{ user.email }}</p>
+      <button type="button" class="yfm-logout-btn" @click="logout()">Sign out</button>
       <p v-if="mailboxError" class="yfm-error">{{ mailboxError }}</p>
       <p v-if="mailboxPending" class="yfm-muted">Loading mailbox…</p>
       <p class="yfm-muted yfm-realtime">Realtime: {{ realtimeTransport }}</p>
@@ -434,6 +442,24 @@ const listThreads = computed(() =>
   font: inherit;
   font-weight: 600;
   cursor: pointer;
+}
+
+.yfm-logout-btn {
+  width: 100%;
+  margin-bottom: 0.75rem;
+  appearance: none;
+  border: 1px solid var(--yfm-border);
+  background: transparent;
+  color: inherit;
+  border-radius: var(--yfm-radius);
+  padding: 0.45rem 0.75rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+.yfm-user {
+  padding: 0 0 0.5rem !important;
+  font-size: 0.8rem;
 }
 
 .yfm-pane-header {

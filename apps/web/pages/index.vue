@@ -1,7 +1,3 @@
 <script setup lang="ts">
-await navigateTo('/mail');
+await navigateTo('/login');
 </script>
-
-<template>
-  <div />
-</template>

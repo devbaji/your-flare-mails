@@ -6,7 +6,9 @@ export const PACKAGE_NAME = '@your-flare-mails/server' as const;
 export type PackageName = typeof PACKAGE_NAME;
 
 export * from './auth/context.js';
+export * from './auth/http.js';
 export * from './ingest/ingest-email.js';
+export * from './services/auth-service.js';
 export * from './services/mailbox-service.js';
 export * from './services/thread-service.js';
 export * from './services/message-service.js';

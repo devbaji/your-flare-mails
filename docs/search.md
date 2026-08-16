@@ -27,7 +27,7 @@ GET /api/mailboxes/:id/search
   &limit=25
 ```
 
-Requires `X-YFM-User-Id` (temporary until Phase 8).
+Requires a valid session (`Authorization: Bearer …`). See [auth.md](./auth.md).
 
 Filters compose with optional FTS `q`. When `q` is empty, only SQL filters apply
 (ordered by `messages.date` descending).
