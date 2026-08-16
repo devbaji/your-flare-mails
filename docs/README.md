@@ -7,7 +7,8 @@
 | [inbound-email.md](./inbound-email.md) | Phase 2 + 5 threading |
 | [mailbox-apis.md](./mailbox-apis.md) | Phase 3–5 |
 | [search.md](./search.md) | Phase 5 |
-| [web-ui.md](./web-ui.md) | Phase 4–5 |
+| [outbound-email.md](./outbound-email.md) | Phase 6 |
+| [web-ui.md](./web-ui.md) | Phase 4–6 |
 | Cloudflare setup | When deploying for real |
 | Deployment | Later |
 | Environment variables | See `.env.example` |

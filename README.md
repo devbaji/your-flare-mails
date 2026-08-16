@@ -6,9 +6,8 @@ real, self-hosted email mailbox on a domain you manage through Cloudflare
 
 ## Status
 
-**Phase 5 — Threading, attachments, search.** Subject/participant thread fallback,
-FTS5 search API + UI, attachment download in the reference app, and draft
-attachment upload (compose UI still Phase 6).
+**Phase 6 — Outbound + compose.** Mock/Cloudflare email transports, draft CRUD with
+autosave, compose/reply/forward UI, and send with success/error feedback.
 
 ## Monorepo map
 

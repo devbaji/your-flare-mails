@@ -20,13 +20,14 @@ Temporary identity (Phase 8 replaces this):
 - `NUXT_PUBLIC_YFM_USER_ID=user_seed_owner` (default)
 - `NUXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8787` (default)
 
-## Phase 5 capabilities
+## Phase 5–6 capabilities
 
 - Browse labels, threads, and messages
 - **Search** via `SearchBar` + `useMailSearch()` (FTS5 BM25)
 - **Attachment download** from `MessageViewer` (signed URL → private R2)
-- **Draft attachment upload** on the Drafts label (seed draft `drf_seed_1`) —
-  compose/send UI is Phase 6
+- **Compose / reply / forward** via `Composer` + `useCompose()` with autosave
+- **Send** through `POST /api/drafts/:id/send` (`MockMailTransport` locally)
+- **Draft attachment upload** on the Drafts label
 
 HTML bodies (when present) render in an iframe with `sandbox=""` (no scripts /
 same-origin). Plain text is preferred when only text is available.

@@ -3,6 +3,7 @@ import {
   DEFAULT_BLOB_URL_TTL_SECONDS,
   DraftAttachmentRepository,
   DraftRepository,
+  MessageRepository,
   R2BlobStore,
   createBlobAccessToken,
   newId,
@@ -58,6 +59,160 @@ export async function getDraft(
   if (!draft) throw new NotFoundError('draft not found');
   await requireMailboxAccess(deps.db, ctx, draft.mailboxId);
   return draft;
+}
+
+export type CreateDraftInput = {
+  mailboxId: string;
+  threadId?: string | null;
+  to?: Array<{ address: string; name?: string }>;
+  cc?: Array<{ address: string; name?: string }>;
+  bcc?: Array<{ address: string; name?: string }>;
+  subject?: string | null;
+  bodyText?: string | null;
+  bodyHtml?: string | null;
+  inReplyToMessageId?: string | null;
+};
+
+export async function createDraft(
+  deps: Pick<DraftServiceDeps, 'db'>,
+  ctx: AuthContext,
+  input: CreateDraftInput,
+): Promise<DraftRow> {
+  await requireMailboxAccess(deps.db, ctx, input.mailboxId);
+  if (input.inReplyToMessageId) {
+    const parent = await new MessageRepository(deps.db).findById(input.inReplyToMessageId);
+    if (!parent || parent.mailboxId !== input.mailboxId) {
+      throw new NotFoundError('reply parent message not found');
+    }
+  }
+  return new DraftRepository(deps.db).create({
+    mailboxId: input.mailboxId,
+    threadId: input.threadId ?? null,
+    toJson: JSON.stringify(input.to ?? []),
+    ccJson: JSON.stringify(input.cc ?? []),
+    bccJson: JSON.stringify(input.bcc ?? []),
+    subject: input.subject ?? null,
+    bodyText: input.bodyText ?? null,
+    bodyHtml: input.bodyHtml ?? null,
+    inReplyToMessageId: input.inReplyToMessageId ?? null,
+    nowIso: new Date().toISOString(),
+  });
+}
+
+export type UpdateDraftInput = {
+  to?: Array<{ address: string; name?: string }>;
+  cc?: Array<{ address: string; name?: string }>;
+  bcc?: Array<{ address: string; name?: string }>;
+  subject?: string | null;
+  bodyText?: string | null;
+  bodyHtml?: string | null;
+  threadId?: string | null;
+  inReplyToMessageId?: string | null;
+};
+
+export async function updateDraft(
+  deps: Pick<DraftServiceDeps, 'db'>,
+  ctx: AuthContext,
+  draftId: string,
+  patch: UpdateDraftInput,
+): Promise<DraftRow> {
+  await getDraft(deps, ctx, draftId);
+  const updateInput: {
+    threadId?: string | null;
+    toJson?: string;
+    ccJson?: string;
+    bccJson?: string;
+    subject?: string | null;
+    bodyText?: string | null;
+    bodyHtml?: string | null;
+    inReplyToMessageId?: string | null;
+    nowIso: string;
+  } = { nowIso: new Date().toISOString() };
+  if (patch.to) updateInput.toJson = JSON.stringify(patch.to);
+  if (patch.cc) updateInput.ccJson = JSON.stringify(patch.cc);
+  if (patch.bcc) updateInput.bccJson = JSON.stringify(patch.bcc);
+  if (patch.subject !== undefined) updateInput.subject = patch.subject;
+  if (patch.bodyText !== undefined) updateInput.bodyText = patch.bodyText;
+  if (patch.bodyHtml !== undefined) updateInput.bodyHtml = patch.bodyHtml;
+  if (patch.threadId !== undefined) updateInput.threadId = patch.threadId;
+  if (patch.inReplyToMessageId !== undefined) {
+    updateInput.inReplyToMessageId = patch.inReplyToMessageId;
+  }
+  const updated = await new DraftRepository(deps.db).update(draftId, updateInput);
+  if (!updated) throw new NotFoundError('draft not found');
+  return updated;
+}
+
+export async function deleteDraft(
+  deps: Pick<DraftServiceDeps, 'db'>,
+  ctx: AuthContext,
+  draftId: string,
+): Promise<void> {
+  await getDraft(deps, ctx, draftId);
+  await new DraftRepository(deps.db).delete(draftId);
+}
+
+/** Create a reply draft prefilled from an existing message. */
+export async function createReplyDraft(
+  deps: Pick<DraftServiceDeps, 'db'>,
+  ctx: AuthContext,
+  messageId: string,
+): Promise<DraftRow> {
+  const message = await new MessageRepository(deps.db).findById(messageId);
+  if (!message) throw new NotFoundError('message not found');
+  await requireMailboxAccess(deps.db, ctx, message.mailboxId);
+
+  const recipients = await new MessageRepository(deps.db).listRecipients(messageId);
+
+  const to =
+    message.direction === 'inbound'
+      ? [
+          {
+            address: message.fromAddress,
+            ...(message.fromName ? { name: message.fromName } : {}),
+          },
+        ]
+      : recipients
+          .filter((r) => r.type === 'to')
+          .map((r) => ({
+            address: r.address,
+            ...(r.name ? { name: r.name } : {}),
+          }));
+
+  const subject = message.subject?.match(/^re:/i)
+    ? message.subject
+    : `Re: ${message.subject || '(no subject)'}`;
+
+  return createDraft(deps, ctx, {
+    mailboxId: message.mailboxId,
+    threadId: message.threadId,
+    to,
+    subject,
+    bodyText: `\n\nOn ${message.date}, ${message.fromName || message.fromAddress} wrote:\n> ${(message.bodyText ?? '').split('\n').join('\n> ')}`,
+    inReplyToMessageId: message.id,
+  });
+}
+
+/** Create a forward draft prefilled from an existing message. */
+export async function createForwardDraft(
+  deps: Pick<DraftServiceDeps, 'db'>,
+  ctx: AuthContext,
+  messageId: string,
+): Promise<DraftRow> {
+  const message = await new MessageRepository(deps.db).findById(messageId);
+  if (!message) throw new NotFoundError('message not found');
+  await requireMailboxAccess(deps.db, ctx, message.mailboxId);
+
+  const subject = message.subject?.match(/^fwd:/i)
+    ? message.subject
+    : `Fwd: ${message.subject || '(no subject)'}`;
+
+  return createDraft(deps, ctx, {
+    mailboxId: message.mailboxId,
+    to: [],
+    subject,
+    bodyText: `\n\n---------- Forwarded message ----------\nFrom: ${message.fromAddress}\nDate: ${message.date}\nSubject: ${message.subject || '(no subject)'}\n\n${message.bodyText ?? ''}`,
+  });
 }
 
 export async function listDraftAttachments(
@@ -154,7 +309,7 @@ export async function openDraftAttachmentContent(
 
   const attachment = await new DraftAttachmentRepository(deps.db).findById(attachmentId);
   if (!attachment || attachment.r2Key !== verified.claims.r2Key) {
-    throw new NotFoundError('draft attachment not found');
+    throw new NotFoundError('draft attachment blob missing');
   }
 
   const obj = await new R2BlobStore(deps.r2).getObject(attachment.r2Key);

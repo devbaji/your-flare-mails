@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {
+  Composer,
   DraftAttachmentPanel,
   MailLayout,
   MailSidebar,
@@ -34,7 +35,7 @@ const draftAttachments = useState<
     sizeBytes: number;
   }>
 >('yfm-draft-attachments', () => []);
-const activeDraftId = useState<string | null>('yfm-active-draft', () => null);
+const listedDraftId = useState<string | null>('yfm-listed-draft', () => null);
 
 const {
   threads,
@@ -67,6 +68,27 @@ const {
   search,
   clear: clearSearch,
 } = useMailSearch(currentId);
+
+const {
+  to: composeTo,
+  cc: composeCc,
+  subject: composeSubject,
+  bodyText: composeBody,
+  mode: composeMode,
+  open: composeOpen,
+  saving: composeSaving,
+  sending: composeSending,
+  statusMessage: composeStatus,
+  errorMessage: composeError,
+  startCompose,
+  startReply,
+  startForward,
+  save: saveCompose,
+  scheduleAutosave,
+  send: sendCompose,
+  discard: discardCompose,
+  close: closeCompose,
+} = useCompose();
 
 const searchText = computed({
   get: () => searchQuery.value.q ?? '',
@@ -120,13 +142,13 @@ async function downloadAttachment(attachmentId: string) {
 
 async function refreshDraftPanel() {
   if (!currentId.value || labelSlug.value !== 'drafts') {
-    activeDraftId.value = null;
+    listedDraftId.value = null;
     draftAttachments.value = [];
     return;
   }
   const { drafts } = await api.listDrafts(currentId.value);
   const draft = drafts[0] ?? null;
-  activeDraftId.value = draft?.id ?? null;
+  listedDraftId.value = draft?.id ?? null;
   if (!draft) {
     draftAttachments.value = [];
     return;
@@ -141,12 +163,12 @@ async function refreshDraftPanel() {
 }
 
 async function uploadDraftFile(file: File) {
-  if (!activeDraftId.value) return;
+  if (!listedDraftId.value) return;
   draftUploading.value = true;
   draftUploadError.value = null;
   try {
     const bytes = new Uint8Array(await file.arrayBuffer());
-    await api.uploadDraftAttachment(activeDraftId.value, {
+    await api.uploadDraftAttachment(listedDraftId.value, {
       filename: file.name,
       contentType: file.type || 'application/octet-stream',
       bytes,
@@ -162,6 +184,34 @@ async function uploadDraftFile(file: File) {
 async function downloadDraftAttachment(attachmentId: string) {
   const { url } = await api.createDraftAttachmentDownloadUrl(attachmentId);
   if (import.meta.client) window.open(url, '_blank', 'noopener,noreferrer');
+}
+
+async function onComposeNew() {
+  if (!currentId.value) return;
+  await startCompose(currentId.value);
+}
+
+async function onReply() {
+  if (!activeMessageId.value) return;
+  await startReply(activeMessageId.value);
+}
+
+async function onForward() {
+  if (!activeMessageId.value) return;
+  await startForward(activeMessageId.value);
+}
+
+async function onSend() {
+  const result = await sendCompose();
+  if (result?.ok) {
+    labelSlug.value = 'sent';
+    activeThreadId.value = result.threadId;
+    activeMessageId.value = result.messageId;
+    await refreshThreads();
+    await refreshThread();
+    await refreshMessage();
+  }
+  await refreshDraftPanel();
 }
 
 watch(currentId, async () => {
@@ -194,6 +244,13 @@ watch(messages, (list) => {
   }
 });
 
+watch(
+  [composeTo, composeCc, composeSubject, composeBody],
+  () => {
+    scheduleAutosave();
+  },
+);
+
 onMounted(async () => {
   await refreshMailboxes();
   await refreshThreads();
@@ -222,6 +279,7 @@ const listThreads = computed(() =>
   <MailLayout :brand-name="brandName">
     <template #sidebar>
       <p v-if="currentMailbox" class="yfm-mail-address">{{ currentMailbox.address }}</p>
+      <button type="button" class="yfm-compose-btn" @click="onComposeNew">Compose</button>
       <MailSidebar :labels="labels" :active-slug="labelSlug" @select="selectLabel" />
       <p v-if="mailboxError" class="yfm-error">{{ mailboxError }}</p>
       <p v-if="mailboxPending" class="yfm-muted">Loading mailbox…</p>
@@ -263,9 +321,26 @@ const listThreads = computed(() =>
     </template>
 
     <div class="yfm-reading">
+      <Composer
+        v-if="composeOpen"
+        v-model:to="composeTo"
+        v-model:cc="composeCc"
+        v-model:subject="composeSubject"
+        v-model:body-text="composeBody"
+        :mode="composeMode"
+        :saving="composeSaving"
+        :sending="composeSending"
+        :status-message="composeStatus"
+        :error-message="composeError"
+        @save="saveCompose()"
+        @send="onSend"
+        @discard="discardCompose()"
+        @close="closeCompose()"
+      />
+
       <DraftAttachmentPanel
-        v-if="labelSlug === 'drafts' && activeDraftId"
-        :draft-id="activeDraftId"
+        v-if="labelSlug === 'drafts' && listedDraftId && !composeOpen"
+        :draft-id="listedDraftId"
         :attachments="draftAttachments"
         :uploading="draftUploading"
         :error="draftUploadError"
@@ -273,10 +348,16 @@ const listThreads = computed(() =>
         @download="downloadDraftAttachment"
       />
 
-      <p v-else-if="!activeThreadId" class="yfm-muted yfm-empty">Select a conversation</p>
-      <template v-else>
-        <header class="yfm-pane-header">
+      <p v-else-if="!activeThreadId && !composeOpen" class="yfm-muted yfm-empty">
+        Select a conversation
+      </p>
+      <template v-else-if="activeThreadId">
+        <header class="yfm-pane-header yfm-pane-header--actions">
           <h2>{{ thread?.subject || '(no subject)' }}</h2>
+          <div class="yfm-thread-actions">
+            <button type="button" :disabled="!activeMessageId" @click="onReply">Reply</button>
+            <button type="button" :disabled="!activeMessageId" @click="onForward">Forward</button>
+          </div>
           <p v-if="threadError" class="yfm-error">{{ threadError }}</p>
           <p v-if="threadPending" class="yfm-muted">Loading thread…</p>
         </header>
@@ -323,14 +404,49 @@ const listThreads = computed(() =>
   font-size: 0.85rem;
 }
 
+.yfm-compose-btn {
+  width: 100%;
+  margin-bottom: 1rem;
+  appearance: none;
+  border: 0;
+  background: var(--yfm-accent);
+  color: var(--yfm-accent-fg);
+  border-radius: var(--yfm-radius);
+  padding: 0.65rem 0.9rem;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .yfm-pane-header {
   padding: 1rem 1rem 0.5rem;
+}
+
+.yfm-pane-header--actions {
+  display: grid;
+  gap: 0.5rem;
 }
 
 .yfm-pane-header h2 {
   margin: 0;
   font-family: var(--yfm-font-display);
   font-size: 1.15rem;
+}
+
+.yfm-thread-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.yfm-thread-actions button {
+  appearance: none;
+  border: 1px solid var(--yfm-border);
+  background: var(--yfm-bg-elevated);
+  color: inherit;
+  border-radius: var(--yfm-radius);
+  padding: 0.35rem 0.7rem;
+  font: inherit;
+  cursor: pointer;
 }
 
 .yfm-reading {

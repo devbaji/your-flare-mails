@@ -105,6 +105,102 @@ export class DraftRepository {
       .all<DraftSqlRow>();
     return results.map(mapDraft);
   }
+
+  async create(input: {
+    id?: string;
+    mailboxId: string;
+    threadId?: string | null;
+    toJson?: string;
+    ccJson?: string;
+    bccJson?: string;
+    subject?: string | null;
+    bodyText?: string | null;
+    bodyHtml?: string | null;
+    inReplyToMessageId?: string | null;
+    nowIso: string;
+  }): Promise<DraftRow> {
+    const id = input.id ?? newId('drf');
+    await this.db
+      .prepare(
+        `INSERT INTO drafts (
+          id, mailbox_id, thread_id, to_json, cc_json, bcc_json, subject, body_text, body_html,
+          in_reply_to_message_id, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .bind(
+        id,
+        input.mailboxId,
+        input.threadId ?? null,
+        input.toJson ?? '[]',
+        input.ccJson ?? '[]',
+        input.bccJson ?? '[]',
+        input.subject ?? null,
+        input.bodyText ?? null,
+        input.bodyHtml ?? null,
+        input.inReplyToMessageId ?? null,
+        input.nowIso,
+        input.nowIso,
+      )
+      .run();
+    const created = await this.findById(id);
+    if (!created) throw new Error('draft create failed');
+    return created;
+  }
+
+  async update(
+    draftId: string,
+    patch: {
+      threadId?: string | null;
+      toJson?: string;
+      ccJson?: string;
+      bccJson?: string;
+      subject?: string | null;
+      bodyText?: string | null;
+      bodyHtml?: string | null;
+      inReplyToMessageId?: string | null;
+      nowIso: string;
+    },
+  ): Promise<DraftRow | null> {
+    const existing = await this.findById(draftId);
+    if (!existing) return null;
+    await this.db
+      .prepare(
+        `UPDATE drafts SET
+          thread_id = ?,
+          to_json = ?,
+          cc_json = ?,
+          bcc_json = ?,
+          subject = ?,
+          body_text = ?,
+          body_html = ?,
+          in_reply_to_message_id = ?,
+          updated_at = ?
+         WHERE id = ?`,
+      )
+      .bind(
+        patch.threadId !== undefined ? patch.threadId : existing.threadId,
+        patch.toJson ?? existing.toJson,
+        patch.ccJson ?? existing.ccJson,
+        patch.bccJson ?? existing.bccJson,
+        patch.subject !== undefined ? patch.subject : existing.subject,
+        patch.bodyText !== undefined ? patch.bodyText : existing.bodyText,
+        patch.bodyHtml !== undefined ? patch.bodyHtml : existing.bodyHtml,
+        patch.inReplyToMessageId !== undefined
+          ? patch.inReplyToMessageId
+          : existing.inReplyToMessageId,
+        patch.nowIso,
+        draftId,
+      )
+      .run();
+    return this.findById(draftId);
+  }
+
+  async delete(draftId: string): Promise<boolean> {
+    const existing = await this.findById(draftId);
+    if (!existing) return false;
+    await this.db.prepare(`DELETE FROM drafts WHERE id = ?`).bind(draftId).run();
+    return true;
+  }
 }
 
 export class DraftAttachmentRepository {

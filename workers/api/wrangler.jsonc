@@ -4,8 +4,14 @@
   "compatibility_date": "2026-08-01",
   "main": "src/index.ts",
   "vars": {
-    "INGEST_HMAC_SECRET": "dev-ingest-hmac-secret-change-me"
+    "INGEST_HMAC_SECRET": "dev-ingest-hmac-secret-change-me",
+    "FORCE_MOCK_TRANSPORT": "true"
   },
+  "send_email": [
+    {
+      "name": "EMAIL"
+    }
+  ],
   "d1_databases": [
     {
       "binding": "DB",

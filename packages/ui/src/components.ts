@@ -6,3 +6,4 @@ export { default as MailSidebar } from './components/MailSidebar.vue';
 export { default as AttachmentList } from './components/AttachmentList.vue';
 export { default as SearchBar } from './components/SearchBar.vue';
 export { default as DraftAttachmentPanel } from './components/DraftAttachmentPanel.vue';
+export { default as Composer } from './components/Composer.vue';

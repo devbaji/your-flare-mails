@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Phase 6 outbound compose: `CloudflareEmailTransport` + `MockMailTransport` send
+  path, draft create/update/delete/send APIs, reply/forward draft helpers,
+  `Composer` + `useCompose()` autosave UI, and send confirmation/errors.
 - Phase 5 threading/search/attachments: subject/participant thread fallback with
   fixtures, FTS5 BM25 search API + `useMailSearch` UI, message attachment download,
   draft attachment upload (`draft_attachments`), and local R2 seed for the invoice

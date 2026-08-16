@@ -11,6 +11,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@your-flare-mails/cloudflare": "workspace:*",
     "@your-flare-mails/core": "workspace:*",
     "@your-flare-mails/server": "workspace:*"
   },

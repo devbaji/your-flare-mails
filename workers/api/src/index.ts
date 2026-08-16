@@ -2,13 +2,22 @@ import {
   INGEST_NONCE_HEADER,
   INGEST_SIGNATURE_HEADER,
   INGEST_TIMESTAMP_HEADER,
+  MockMailTransport,
 } from '@your-flare-mails/core';
+import {
+  CloudflareEmailTransport,
+  type SendEmailBinding,
+} from '@your-flare-mails/cloudflare';
 import {
   AuthorizationError,
   NotFoundError,
   ValidationError,
   createAttachmentDownloadUrl,
+  createDraft,
   createDraftAttachmentDownloadUrl,
+  createForwardDraft,
+  createReplyDraft,
+  deleteDraft,
   getAttachment,
   getDraft,
   getMailbox,
@@ -23,6 +32,8 @@ import {
   openAttachmentContent,
   openDraftAttachmentContent,
   searchMessages,
+  sendDraft,
+  updateDraft,
   uploadDraftAttachment,
   type AuthContext,
 } from '@your-flare-mails/server';
@@ -33,6 +44,10 @@ export interface Env {
   INGEST_HMAC_SECRET: string;
   /** Optional public origin for signed download URLs. Defaults to request origin. */
   PUBLIC_BASE_URL?: string;
+  /** Cloudflare Email Service send_email binding (simulated locally by Wrangler). */
+  EMAIL?: SendEmailBinding;
+  /** When "true", force MockMailTransport even if EMAIL is bound. */
+  FORCE_MOCK_TRANSPORT?: string;
 }
 
 /** Temporary Phase 3 identity header — replaced by real sessions in Phase 8. */
@@ -91,6 +106,21 @@ function blobDeps(env: Env, publicBaseUrl: string) {
     blobSigningSecret: env.INGEST_HMAC_SECRET,
     publicBaseUrl,
   };
+}
+
+function createTransport(env: Env) {
+  if (env.FORCE_MOCK_TRANSPORT === 'true' || !env.EMAIL) {
+    return new MockMailTransport({
+      onSend(message) {
+        console.log('[MockMailTransport] send', {
+          from: message.from.address,
+          to: message.to.map((r) => r.address),
+          subject: message.subject,
+        });
+      },
+    });
+  }
+  return new CloudflareEmailTransport(env.EMAIL);
 }
 
 export default {
@@ -244,10 +274,62 @@ export default {
       }
 
       const draftsMatch = match(pathname, /^\/api\/mailboxes\/([^/]+)\/drafts$/);
-      if (request.method === 'GET' && draftsMatch) {
-        return json({
-          drafts: await listDrafts(deps, ctx, draftsMatch[1]!),
-        });
+      if (draftsMatch) {
+        const mailboxId = draftsMatch[1]!;
+        if (request.method === 'GET') {
+          return json({
+            drafts: await listDrafts(deps, ctx, mailboxId),
+          });
+        }
+        if (request.method === 'POST') {
+          const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+          const input: Parameters<typeof createDraft>[2] = { mailboxId };
+          if (body.threadId !== undefined) {
+            input.threadId = body.threadId as string | null;
+          }
+          if (body.to !== undefined) {
+            input.to = body.to as Array<{ address: string; name?: string }>;
+          }
+          if (body.cc !== undefined) {
+            input.cc = body.cc as Array<{ address: string; name?: string }>;
+          }
+          if (body.bcc !== undefined) {
+            input.bcc = body.bcc as Array<{ address: string; name?: string }>;
+          }
+          if (body.subject !== undefined) {
+            input.subject = body.subject as string | null;
+          }
+          if (body.bodyText !== undefined) {
+            input.bodyText = body.bodyText as string | null;
+          }
+          if (body.bodyHtml !== undefined) {
+            input.bodyHtml = body.bodyHtml as string | null;
+          }
+          if (body.inReplyToMessageId !== undefined) {
+            input.inReplyToMessageId = body.inReplyToMessageId as string | null;
+          }
+          const draft = await createDraft(deps, ctx, input);
+          return json({ draft }, 201);
+        }
+      }
+
+      const replyDraftMatch = match(pathname, /^\/api\/messages\/([^/]+)\/reply-draft$/);
+      if (request.method === 'POST' && replyDraftMatch) {
+        return json(
+          { draft: await createReplyDraft(deps, ctx, replyDraftMatch[1]!) },
+          201,
+        );
+      }
+
+      const forwardDraftMatch = match(
+        pathname,
+        /^\/api\/messages\/([^/]+)\/forward-draft$/,
+      );
+      if (request.method === 'POST' && forwardDraftMatch) {
+        return json(
+          { draft: await createForwardDraft(deps, ctx, forwardDraftMatch[1]!) },
+          201,
+        );
       }
 
       const threadMatch = match(pathname, /^\/api\/threads\/([^/]+)$/);
@@ -270,9 +352,54 @@ export default {
         return json(await getMessage(deps, ctx, messageMatch[1]!));
       }
 
+      const draftSendMatch = match(pathname, /^\/api\/drafts\/([^/]+)\/send$/);
+      if (request.method === 'POST' && draftSendMatch) {
+        const body = await request.json().catch(() => ({}));
+        const result = await sendDraft(
+          {
+            db: env.DB,
+            r2: env.ATTACHMENTS,
+            transport: createTransport(env),
+          },
+          ctx,
+          draftSendMatch[1]!,
+          body,
+        );
+        return json(result, result.ok ? 200 : 502);
+      }
+
       const draftMatch = match(pathname, /^\/api\/drafts\/([^/]+)$/);
-      if (request.method === 'GET' && draftMatch) {
-        return json({ draft: await getDraft(deps, ctx, draftMatch[1]!) });
+      if (draftMatch) {
+        const draftId = draftMatch[1]!;
+        if (request.method === 'GET') {
+          return json({ draft: await getDraft(deps, ctx, draftId) });
+        }
+        if (request.method === 'PATCH') {
+          const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+          const patch: Parameters<typeof updateDraft>[3] = {};
+          if (body.to !== undefined) {
+            patch.to = body.to as Array<{ address: string; name?: string }>;
+          }
+          if (body.cc !== undefined) {
+            patch.cc = body.cc as Array<{ address: string; name?: string }>;
+          }
+          if (body.bcc !== undefined) {
+            patch.bcc = body.bcc as Array<{ address: string; name?: string }>;
+          }
+          if (body.subject !== undefined) patch.subject = body.subject as string | null;
+          if (body.bodyText !== undefined) patch.bodyText = body.bodyText as string | null;
+          if (body.bodyHtml !== undefined) patch.bodyHtml = body.bodyHtml as string | null;
+          if (body.threadId !== undefined) patch.threadId = body.threadId as string | null;
+          if (body.inReplyToMessageId !== undefined) {
+            patch.inReplyToMessageId = body.inReplyToMessageId as string | null;
+          }
+          const draft = await updateDraft(deps, ctx, draftId, patch);
+          return json({ draft });
+        }
+        if (request.method === 'DELETE') {
+          await deleteDraft(deps, ctx, draftId);
+          return json({ ok: true });
+        }
       }
 
       const draftAttachmentsMatch = match(

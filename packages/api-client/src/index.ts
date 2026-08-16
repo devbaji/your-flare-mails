@@ -230,6 +230,83 @@ export function createMailApiClient(options: MailApiClientOptions) {
       request<{ drafts: DraftDto[] }>(
         `/api/mailboxes/${encodeURIComponent(mailboxId)}/drafts`,
       ),
+    getDraft: (draftId: string) =>
+      request<{ draft: DraftDto }>(`/api/drafts/${encodeURIComponent(draftId)}`),
+    createDraft: (
+      mailboxId: string,
+      body: {
+        to?: Array<{ address: string; name?: string }>;
+        cc?: Array<{ address: string; name?: string }>;
+        bcc?: Array<{ address: string; name?: string }>;
+        subject?: string | null;
+        bodyText?: string | null;
+        bodyHtml?: string | null;
+        threadId?: string | null;
+        inReplyToMessageId?: string | null;
+      } = {},
+    ) =>
+      request<{ draft: DraftDto }>(
+        `/api/mailboxes/${encodeURIComponent(mailboxId)}/drafts`,
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(body),
+        },
+      ),
+    updateDraft: (
+      draftId: string,
+      body: {
+        to?: Array<{ address: string; name?: string }>;
+        cc?: Array<{ address: string; name?: string }>;
+        bcc?: Array<{ address: string; name?: string }>;
+        subject?: string | null;
+        bodyText?: string | null;
+        bodyHtml?: string | null;
+        threadId?: string | null;
+        inReplyToMessageId?: string | null;
+      },
+    ) =>
+      request<{ draft: DraftDto }>(`/api/drafts/${encodeURIComponent(draftId)}`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+      }),
+    deleteDraft: (draftId: string) =>
+      request<{ ok: boolean }>(`/api/drafts/${encodeURIComponent(draftId)}`, {
+        method: 'DELETE',
+      }),
+    createReplyDraft: (messageId: string) =>
+      request<{ draft: DraftDto }>(
+        `/api/messages/${encodeURIComponent(messageId)}/reply-draft`,
+        { method: 'POST' },
+      ),
+    createForwardDraft: (messageId: string) =>
+      request<{ draft: DraftDto }>(
+        `/api/messages/${encodeURIComponent(messageId)}/forward-draft`,
+        { method: 'POST' },
+      ),
+    sendDraft: (
+      draftId: string,
+      body: {
+        to?: Array<{ address: string; name?: string }>;
+        cc?: Array<{ address: string; name?: string }>;
+        bcc?: Array<{ address: string; name?: string }>;
+        subject?: string;
+        bodyText?: string;
+        bodyHtml?: string;
+      } = {},
+    ) =>
+      request<{
+        ok: boolean;
+        messageId: string;
+        threadId: string;
+        providerMessageId?: string;
+        error?: string;
+      }>(`/api/drafts/${encodeURIComponent(draftId)}/send`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+      }),
     listDraftAttachments: (draftId: string) =>
       request<{ attachments: DraftAttachmentDto[] }>(
         `/api/drafts/${encodeURIComponent(draftId)}/attachments`,

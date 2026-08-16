@@ -363,6 +363,9 @@ importers:
 
   workers/api:
     dependencies:
+      '@your-flare-mails/cloudflare':
+        specifier: workspace:*
+        version: link:../../packages/cloudflare
       '@your-flare-mails/core':
         specifier: workspace:*
         version: link:../../packages/core
