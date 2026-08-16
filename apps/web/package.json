@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "nuxt dev --port 3000",
     "build": "nuxt build",
+    "build:desktop": "YFM_DESKTOP=1 nuxt generate",
     "preview": "nuxt preview",
     "typecheck": "nuxt prepare && tsc --noEmit -p tsconfig.json",
     "lint": "eslint --ignore-pattern '**/*.vue' --ignore-pattern '.nuxt/**' --ignore-pattern '.output/**' .",

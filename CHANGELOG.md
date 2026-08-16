@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Phase 9 desktop: Tauri 2 shell (`apps/desktop`) wrapping Nuxt, OS notifications
+  via `useNotifications()`, OS keychain session storage, close-to-tray, and
+  [docs/desktop.md](./docs/desktop.md).
 - Phase 8 auth: PBKDF2 passwords, D1 sessions, `POST /api/auth/login|logout` +
   `GET /api/auth/me`, Bearer/cookie identity (replacing spoofable user headers by
   default), CSRF on cookie mutations, ingest/login rate limits, optional

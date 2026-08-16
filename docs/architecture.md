@@ -48,6 +48,8 @@ anything from Vue or Nuxt.
   Hibernation; poll fallback (see [realtime.md](./realtime.md))
 - **Auth:** session cookies + Bearer tokens; optional Cloudflare Access
   (see [auth.md](./auth.md))
+- **Desktop:** Tauri 2 shell with local notifications + keychain sessions
+  (see [desktop.md](./desktop.md))
 
 ## Domain model
 

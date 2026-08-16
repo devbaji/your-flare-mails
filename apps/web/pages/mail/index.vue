@@ -254,9 +254,11 @@ watch(
 
 const { transport: realtimeTransport, lastEvent: realtimeEvent } =
   useRealtimeMailbox(currentId);
+const { notifyFromRealtimeEvent } = useNotifications();
 
 watch(realtimeEvent, async (event) => {
   if (!event || event.type === 'ping') return;
+  notifyFromRealtimeEvent(event);
   await refreshThreads();
   if (
     activeThreadId.value &&

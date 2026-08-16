@@ -1,6 +1,11 @@
 import type { UserDto } from '@your-flare-mails/api-client';
 import { useRouter, useState } from '#imports';
 
+import {
+  clearDesktopSession,
+  loadDesktopSession,
+  storeDesktopSession,
+} from '../desktop/secure-session.js';
 import { useYfmApi } from './useMailbox.js';
 
 export function useAuth() {
@@ -20,6 +25,10 @@ export function useAuth() {
       user.value = result.user;
       sessionToken.value = result.sessionToken;
       csrfToken.value = result.csrfToken;
+      await storeDesktopSession({
+        sessionToken: result.sessionToken,
+        csrfToken: result.csrfToken,
+      });
       return result.user;
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Login failed';
@@ -38,10 +47,18 @@ export function useAuth() {
     user.value = null;
     sessionToken.value = null;
     csrfToken.value = null;
+    await clearDesktopSession();
     await router.push('/login');
   }
 
   async function refreshSession() {
+    if (!sessionToken.value) {
+      const stored = await loadDesktopSession();
+      if (stored.sessionToken) {
+        sessionToken.value = stored.sessionToken;
+        csrfToken.value = stored.csrfToken;
+      }
+    }
     if (!sessionToken.value) {
       user.value = null;
       return null;
@@ -52,11 +69,16 @@ export function useAuth() {
       const result = await api.me();
       user.value = result.user;
       if (result.csrfToken) csrfToken.value = result.csrfToken;
+      await storeDesktopSession({
+        sessionToken: sessionToken.value,
+        csrfToken: csrfToken.value,
+      });
       return result.user;
     } catch (err) {
       user.value = null;
       sessionToken.value = null;
       csrfToken.value = null;
+      await clearDesktopSession();
       error.value = err instanceof Error ? err.message : 'Session expired';
       return null;
     } finally {

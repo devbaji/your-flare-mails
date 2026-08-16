@@ -1,0 +1,25 @@
+{
+  "name": "@your-flare-mails/desktop",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "YourFlareMails Tauri 2 desktop shell",
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "tauri": "tauri",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "echo 'desktop lint: Rust checked via cargo; no JS eslint surface'",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.8.0",
+    "@tauri-apps/plugin-notification": "^2.3.0"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.8.0",
+    "@types/node": "^22.20.1",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}

@@ -2,17 +2,20 @@ import { fileURLToPath } from 'node:url';
 
 import { defineNuxtConfig } from 'nuxt/config';
 
+const desktop = process.env.YFM_DESKTOP === '1';
+
 export default defineNuxtConfig({
   compatibilityDate: '2025-01-01',
   devtools: { enabled: false },
   modules: ['@your-flare-mails/nuxt'],
   css: ['@your-flare-mails/theme/tokens.css', '~/assets/app.css'],
+  ssr: !desktop,
   yourFlareMails: {
     apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8787',
     brandName: 'YourFlareMails',
   },
   nitro: {
-    preset: 'cloudflare_module',
+    preset: desktop ? 'static' : 'cloudflare_module',
   },
   alias: {
     '@your-flare-mails/ui/components': fileURLToPath(
@@ -23,6 +26,7 @@ export default defineNuxtConfig({
     optimizeDeps: {
       include: ['@your-flare-mails/api-client'],
     },
+    clearScreen: false,
   },
   typescript: {
     strict: true,

@@ -84,7 +84,13 @@ export interface Env {
   MAILBOX_REALTIME: DurableObjectNamespace;
 }
 
-const DEFAULT_CORS = ['http://127.0.0.1:3000', 'http://localhost:3000'];
+const DEFAULT_CORS = [
+  'http://127.0.0.1:3000',
+  'http://localhost:3000',
+  'http://tauri.localhost',
+  'https://tauri.localhost',
+  'tauri://localhost',
+];
 
 function json(
   data: unknown,

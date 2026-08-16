@@ -6,9 +6,9 @@ real, self-hosted email mailbox on a domain you manage through Cloudflare
 
 ## Status
 
-**Phase 8 — Authentication.** Session login (`owner@example.com` /
-`owner-dev-password` locally), Bearer + cookie auth, CSRF, rate limits, optional
-Cloudflare Access. See [docs/auth.md](./docs/auth.md).
+**Phase 9 — Desktop.** Tauri 2 shell wrapping `apps/web`, OS notifications on
+realtime events, OS keychain session storage, and system tray basics. See
+[docs/desktop.md](./docs/desktop.md).
 
 ## Monorepo map
 
