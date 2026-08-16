@@ -26,5 +26,19 @@
       "bucket_name": "your-flare-mails-attachments",
       "preview_bucket_name": "your-flare-mails-attachments-preview"
     }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "MAILBOX_REALTIME",
+        "class_name": "MailboxRealtime"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1-mailbox-realtime",
+      "new_sqlite_classes": ["MailboxRealtime"]
+    }
   ]
 }

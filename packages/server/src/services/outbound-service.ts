@@ -3,6 +3,7 @@ import {
   OutboundAddressSchema,
   computeMessageFingerprint,
   type MailTransport,
+  type MailboxRealtimeEvent,
   type OutboundAddress,
 } from '@your-flare-mails/core';
 import {
@@ -23,6 +24,8 @@ export type OutboundServiceDeps = {
   db: D1Queryable;
   r2: R2BucketLike;
   transport: MailTransport;
+  /** Best-effort realtime fan-out (Phase 7). Must not throw into send. */
+  notifyMailbox?: (event: MailboxRealtimeEvent) => Promise<void>;
 };
 
 type SendDraftOverrides = {
@@ -95,12 +98,14 @@ export type SendDraftResult =
       ok: true;
       messageId: string;
       threadId: string;
+      mailboxId: string;
       providerMessageId?: string;
     }
   | {
       ok: false;
       messageId: string;
       threadId: string;
+      mailboxId: string;
       error: string;
     };
 
@@ -247,17 +252,34 @@ export async function sendDraft(
       ok: false,
       messageId,
       threadId,
+      mailboxId: draft.mailboxId,
       error: sendResult.error ?? 'send failed',
     };
   }
 
-  await outbound.updateMessageStatus(messageId, 'sent', new Date().toISOString());
+  const sentAt = new Date().toISOString();
+  await outbound.updateMessageStatus(messageId, 'sent', sentAt);
   await new DraftRepository(deps.db).delete(draft.id);
+
+  if (deps.notifyMailbox) {
+    try {
+      await deps.notifyMailbox({
+        type: 'message.sent',
+        mailboxId: draft.mailboxId,
+        messageId,
+        threadId,
+        at: sentAt,
+      });
+    } catch {
+      // Realtime is best-effort; send already succeeded.
+    }
+  }
 
   const success: SendDraftResult = {
     ok: true,
     messageId,
     threadId,
+    mailboxId: draft.mailboxId,
   };
   if (sendResult.providerMessageId) {
     success.providerMessageId = sendResult.providerMessageId;

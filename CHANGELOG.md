@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Phase 7 realtime: per-mailbox `MailboxRealtime` Durable Object (WebSocket
+  Hibernation), ingest/send fan-out, `GET …/ws` + poll fallback,
+  `useRealtimeMailbox()`, and [docs/realtime.md](./docs/realtime.md).
 - Phase 6 outbound compose: `CloudflareEmailTransport` + `MockMailTransport` send
   path, draft create/update/delete/send APIs, reply/forward draft helpers,
   `Composer` + `useCompose()` autosave UI, and send confirmation/errors.

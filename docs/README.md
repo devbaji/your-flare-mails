@@ -8,6 +8,7 @@
 | [mailbox-apis.md](./mailbox-apis.md) | Phase 3–5 |
 | [search.md](./search.md) | Phase 5 |
 | [outbound-email.md](./outbound-email.md) | Phase 6 |
+| [realtime.md](./realtime.md) | Phase 7 |
 | [web-ui.md](./web-ui.md) | Phase 4–6 |
 | Cloudflare setup | When deploying for real |
 | Deployment | Later |

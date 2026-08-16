@@ -20,7 +20,7 @@ Temporary identity (Phase 8 replaces this):
 - `NUXT_PUBLIC_YFM_USER_ID=user_seed_owner` (default)
 - `NUXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8787` (default)
 
-## Phase 5–6 capabilities
+## Phase 5–7 capabilities
 
 - Browse labels, threads, and messages
 - **Search** via `SearchBar` + `useMailSearch()` (FTS5 BM25)
@@ -28,6 +28,8 @@ Temporary identity (Phase 8 replaces this):
 - **Compose / reply / forward** via `Composer` + `useCompose()` with autosave
 - **Send** through `POST /api/drafts/:id/send` (`MockMailTransport` locally)
 - **Draft attachment upload** on the Drafts label
+- **Realtime** via `useRealtimeMailbox()` (WebSocket + poll fallback; see
+  [realtime.md](./realtime.md))
 
 HTML bodies (when present) render in an iframe with `sandbox=""` (no scripts /
 same-origin). Plain text is preferred when only text is available.
@@ -36,4 +38,4 @@ same-origin). Plain text is preferred when only text is available.
 
 Skip `@your-flare-mails/ui` / `@your-flare-mails/theme` and use only the Nuxt
 composables (`useMailbox`, `useThreadList`, `useThread`, `useMessage`,
-`useMailSearch`) against the same API.
+`useMailSearch`, `useRealtimeMailbox`) against the same API.

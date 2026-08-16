@@ -3,9 +3,14 @@ import {
   INGEST_SIGNATURE_HEADER,
   INGEST_TIMESTAMP_HEADER,
   MockMailTransport,
+  type MailboxRealtimeEvent,
 } from '@your-flare-mails/core';
 import {
   CloudflareEmailTransport,
+  MailboxRealtime,
+  notifyMailboxRealtime,
+  pollMailboxRealtime,
+  upgradeMailboxRealtimeWebSocket,
   type SendEmailBinding,
 } from '@your-flare-mails/cloudflare';
 import {
@@ -38,6 +43,8 @@ import {
   type AuthContext,
 } from '@your-flare-mails/server';
 
+export { MailboxRealtime };
+
 export interface Env {
   DB: D1Database;
   ATTACHMENTS: R2Bucket;
@@ -48,6 +55,8 @@ export interface Env {
   EMAIL?: SendEmailBinding;
   /** When "true", force MockMailTransport even if EMAIL is bound. */
   FORCE_MOCK_TRANSPORT?: string;
+  /** Per-mailbox WebSocket hibernation Durable Object. */
+  MAILBOX_REALTIME: DurableObjectNamespace;
 }
 
 /** Temporary Phase 3 identity header — replaced by real sessions in Phase 8. */
@@ -123,6 +132,13 @@ function createTransport(env: Env) {
   return new CloudflareEmailTransport(env.EMAIL);
 }
 
+async function notifyMailbox(env: Env, event: MailboxRealtimeEvent): Promise<void> {
+  const result = await notifyMailboxRealtime(env.MAILBOX_REALTIME, event);
+  if (!result.ok) {
+    console.error('[realtime] notify failed', result.error);
+  }
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
@@ -149,6 +165,7 @@ export default {
           db: env.DB,
           r2: env.ATTACHMENTS,
           hmacSecret: env.INGEST_HMAC_SECRET,
+          notifyMailbox: (event) => notifyMailbox(env, event),
         },
         {
           rawBody,
@@ -229,11 +246,49 @@ export default {
     }
 
     const auth = requireAuth(request);
-    if (auth instanceof Response) return auth;
+    if (auth instanceof Response) {
+      // Browser WebSockets cannot set custom headers — allow ?userId= until Phase 8 cookies.
+      const wsMatch = match(pathname, /^\/api\/mailboxes\/([^/]+)\/ws$/);
+      if (
+        wsMatch &&
+        request.headers.get('Upgrade')?.toLowerCase() === 'websocket'
+      ) {
+        const userId = url.searchParams.get('userId')?.trim();
+        if (!userId) return auth;
+        const mailboxId = wsMatch[1]!;
+        try {
+          await getMailbox({ db: env.DB }, { userId }, mailboxId);
+          return await upgradeMailboxRealtimeWebSocket(
+            env.MAILBOX_REALTIME,
+            mailboxId,
+            request,
+            { userId, connectedAt: new Date().toISOString() },
+          );
+        } catch (error) {
+          return errorResponse(error);
+        }
+      }
+      return auth;
+    }
     const ctx = auth;
     const deps = { db: env.DB, r2: env.ATTACHMENTS };
 
     try {
+      const wsMatch = match(pathname, /^\/api\/mailboxes\/([^/]+)\/ws$/);
+      if (
+        wsMatch &&
+        request.headers.get('Upgrade')?.toLowerCase() === 'websocket'
+      ) {
+        const mailboxId = wsMatch[1]!;
+        await getMailbox(deps, ctx, mailboxId);
+        return await upgradeMailboxRealtimeWebSocket(
+          env.MAILBOX_REALTIME,
+          mailboxId,
+          request,
+          { userId: ctx.userId, connectedAt: new Date().toISOString() },
+        );
+      }
+
       if (request.method === 'GET' && pathname === '/api/mailboxes') {
         return json({ mailboxes: await listMailboxes(deps, ctx) });
       }
@@ -241,6 +296,22 @@ export default {
       const mailboxMatch = match(pathname, /^\/api\/mailboxes\/([^/]+)$/);
       if (request.method === 'GET' && mailboxMatch) {
         return json({ mailbox: await getMailbox(deps, ctx, mailboxMatch[1]!) });
+      }
+
+      const pollMatch = match(
+        pathname,
+        /^\/api\/mailboxes\/([^/]+)\/events\/poll$/,
+      );
+      if (request.method === 'GET' && pollMatch) {
+        const mailboxId = pollMatch[1]!;
+        await getMailbox(deps, ctx, mailboxId);
+        const since = Number.parseInt(url.searchParams.get('since') ?? '0', 10);
+        const result = await pollMailboxRealtime(
+          env.MAILBOX_REALTIME,
+          mailboxId,
+          Number.isFinite(since) ? since : 0,
+        );
+        return json(result);
       }
 
       const threadsMatch = match(pathname, /^\/api\/mailboxes\/([^/]+)\/threads$/);
@@ -360,6 +431,7 @@ export default {
             db: env.DB,
             r2: env.ATTACHMENTS,
             transport: createTransport(env),
+            notifyMailbox: (event) => notifyMailbox(env, event),
           },
           ctx,
           draftSendMatch[1]!,

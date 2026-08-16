@@ -2,6 +2,7 @@ import {
   IngestRequestSchema,
   verifyIngestSignature,
   type IngestRequest,
+  type MailboxRealtimeEvent,
 } from '@your-flare-mails/core';
 import {
   D1IngestRepository,
@@ -17,6 +18,8 @@ export type IngestEmailDeps = {
   db: D1Queryable;
   r2: R2Puttable;
   hmacSecret: string;
+  /** Best-effort realtime fan-out (Phase 7). Must not throw into ingest. */
+  notifyMailbox?: (event: MailboxRealtimeEvent) => Promise<void>;
 };
 
 export type IngestEmailHttpInput = {
@@ -222,6 +225,20 @@ export async function ingestEmail(
       }
     }
     throw error;
+  }
+
+  if (deps.notifyMailbox) {
+    try {
+      await deps.notifyMailbox({
+        type: 'message.created',
+        mailboxId: mailbox.id,
+        messageId,
+        threadId,
+        at: nowIso,
+      });
+    } catch {
+      // Realtime is best-effort; persistence already succeeded.
+    }
   }
 
   return {

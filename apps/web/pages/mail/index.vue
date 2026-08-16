@@ -251,6 +251,23 @@ watch(
   },
 );
 
+const { transport: realtimeTransport, lastEvent: realtimeEvent } =
+  useRealtimeMailbox(currentId);
+
+watch(realtimeEvent, async (event) => {
+  if (!event || event.type === 'ping') return;
+  await refreshThreads();
+  if (
+    activeThreadId.value &&
+    'threadId' in event &&
+    event.threadId === activeThreadId.value
+  ) {
+    await refreshThread();
+    if (activeMessageId.value) await refreshMessage();
+  }
+  if (labelSlug.value === 'drafts') await refreshDraftPanel();
+});
+
 onMounted(async () => {
   await refreshMailboxes();
   await refreshThreads();
@@ -283,6 +300,7 @@ const listThreads = computed(() =>
       <MailSidebar :labels="labels" :active-slug="labelSlug" @select="selectLabel" />
       <p v-if="mailboxError" class="yfm-error">{{ mailboxError }}</p>
       <p v-if="mailboxPending" class="yfm-muted">Loading mailbox…</p>
+      <p class="yfm-muted yfm-realtime">Realtime: {{ realtimeTransport }}</p>
     </template>
 
     <template #list>
@@ -467,6 +485,11 @@ const listThreads = computed(() =>
 .yfm-empty {
   color: var(--yfm-fg-muted);
   padding: 1rem;
+}
+
+.yfm-realtime {
+  padding: 0.5rem 0 0;
+  font-size: 0.75rem;
 }
 
 .yfm-error {

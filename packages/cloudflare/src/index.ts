@@ -17,3 +17,5 @@ export * from './repos/messages.js';
 export * from './repos/search.js';
 export * from './repos/drafts.js';
 export * from './repos/outbound.js';
+export * from './realtime/events.js';
+export * from './realtime/mailbox-realtime.js';

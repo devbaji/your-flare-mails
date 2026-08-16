@@ -6,8 +6,8 @@ real, self-hosted email mailbox on a domain you manage through Cloudflare
 
 ## Status
 
-**Phase 6 — Outbound + compose.** Mock/Cloudflare email transports, draft CRUD with
-autosave, compose/reply/forward UI, and send with success/error feedback.
+**Phase 7 — Realtime.** Per-mailbox Durable Object (WebSocket Hibernation),
+ingest/send fan-out, `useRealtimeMailbox()`, and poll fallback.
 
 ## Monorepo map
 

@@ -34,4 +34,5 @@ export type {
   ThreadLabel,
   User,
   DevicePlatform,
+  MailboxRealtimeEvent,
 } from '@your-flare-mails/core';

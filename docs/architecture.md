@@ -44,7 +44,8 @@ anything from Vue or Nuxt.
 - **Search:** D1 FTS5 + BM25 via triggers; see [search.md](./search.md)
 - **Outbound:** `MailTransport` → `CloudflareEmailTransport` / `MockMailTransport`
   (see [outbound-email.md](./outbound-email.md))
-- **Realtime:** per-mailbox Durable Object / WebSocket Hibernation (Phase 7)
+- **Realtime:** per-mailbox `MailboxRealtime` Durable Object + WebSocket
+  Hibernation; poll fallback (see [realtime.md](./realtime.md))
 
 ## Domain model
 

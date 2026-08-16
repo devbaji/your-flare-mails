@@ -361,6 +361,25 @@ export function createMailApiClient(options: MailApiClientOptions) {
         `/api/draft-attachments/${encodeURIComponent(attachmentId)}/url`,
         { method: 'POST' },
       ),
+    pollMailboxEvents: (mailboxId: string, since = 0) =>
+      request<{
+        seq: number;
+        events: Array<{
+          seq: number;
+          event: {
+            type: string;
+            mailboxId?: string;
+            messageId?: string;
+            threadId?: string;
+            at: string;
+            reason?: string;
+          };
+        }>;
+      }>(
+        `/api/mailboxes/${encodeURIComponent(mailboxId)}/events/poll?since=${encodeURIComponent(String(since))}`,
+      ),
+    mailboxWebSocketPath: (mailboxId: string) =>
+      `/api/mailboxes/${encodeURIComponent(mailboxId)}/ws`,
   };
 }
 
