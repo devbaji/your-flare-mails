@@ -338,8 +338,7 @@ watch(composeDraft, async (draft) => {
   if (draft && composeOpen.value) await refreshComposeAttachments();
 });
 
-const { transport: realtimeTransport, lastEvent: realtimeEvent } =
-  useRealtimeMailbox(currentId);
+const { lastEvent: realtimeEvent } = useRealtimeMailbox(currentId);
 const { notifyFromRealtimeEvent } = useNotifications();
 
 watch(realtimeEvent, async (event) => {
@@ -373,8 +372,6 @@ onMounted(async () => {
   await ensurePushRegistration();
 });
 
-const pushStatus = useState<string | null>('yfm-push-status', () => null);
-
 async function waitForTauri(timeoutMs = 12000): Promise<boolean> {
   const { isTauri } = useNotifications();
   if (isTauri()) return true;
@@ -387,35 +384,18 @@ async function waitForTauri(timeoutMs = 12000): Promise<boolean> {
 }
 
 async function ensurePushRegistration() {
-  const { registerPushDevice, detectClientPlatform, isTauri } = useNotifications();
-  pushStatus.value = 'checking runtime…';
-
-  const ready = await waitForTauri();
-  if (!ready) {
-    pushStatus.value = `not tauri (${detectClientPlatform()})`;
-    return;
-  }
+  const { registerPushDevice, isTauri } = useNotifications();
+  if (!(await waitForTauri()) || !isTauri()) return;
 
   const mailboxId = currentId.value;
-  if (!mailboxId) {
-    pushStatus.value = 'waiting for mailbox…';
-    return;
-  }
+  if (!mailboxId) return;
 
-  // FCM token / Tauri IPC can lag on cold start — retry generously.
+  // FCM token / Tauri IPC can lag on cold start.
   for (let attempt = 1; attempt <= 8; attempt += 1) {
     try {
-      pushStatus.value = `registering (${attempt}) · ${detectClientPlatform()}`;
       await registerPushDevice({ mailboxId });
-      pushStatus.value = 'push registered';
       return;
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      console.warn('[push] registration failed', message, {
-        tauri: isTauri(),
-        platform: detectClientPlatform(),
-      });
-      pushStatus.value = message;
+    } catch {
       if (attempt < 8) await new Promise((r) => setTimeout(r, 1000 * attempt));
     }
   }
@@ -494,9 +474,6 @@ function toggleColorMode() {
     v-model:sidebar-open="sidebarOpen"
   >
     <template #header-actions>
-      <span v-if="viewportCompact && pushStatus" class="yfm-push-chip" :title="pushStatus">
-        {{ pushStatus }}
-      </span>
       <button
         type="button"
         class="yfm-theme-toggle"
@@ -561,10 +538,6 @@ function toggleColorMode() {
       <button type="button" class="yfm-logout-btn" @click="logout()">Sign out</button>
       <p v-if="mailboxError" class="yfm-error">{{ mailboxError }}</p>
       <p v-if="mailboxPending" class="yfm-muted">Loading mailbox…</p>
-      <p class="yfm-muted yfm-realtime">
-        Realtime: {{ realtimeTransport }}
-        <template v-if="pushStatus"> · Push: {{ pushStatus }}</template>
-      </p>
     </template>
 
     <template #list>
@@ -742,19 +715,6 @@ function toggleColorMode() {
   flex-shrink: 0;
 }
 
-.yfm-push-chip {
-  max-width: 7.5rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 0.65rem;
-  line-height: 1.2;
-  color: var(--yfm-fg-muted);
-  border: 1px solid var(--yfm-border);
-  border-radius: 999px;
-  padding: 0.25rem 0.45rem;
-}
-
 .yfm-theme-toggle:hover {
   color: var(--yfm-fg);
   border-color: var(--yfm-accent);
@@ -912,11 +872,6 @@ function toggleColorMode() {
 .yfm-empty {
   color: var(--yfm-fg-muted);
   padding: 1rem;
-}
-
-.yfm-realtime {
-  padding: 0.5rem 0 0;
-  font-size: 0.75rem;
 }
 
 .yfm-error {

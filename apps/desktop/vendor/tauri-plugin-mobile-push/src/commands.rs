@@ -26,35 +26,22 @@ extern "C" {
 pub(crate) async fn request_permission<R: Runtime>(
     app: AppHandle<R>,
 ) -> Result<PermissionResponse> {
-    eprintln!("[mobile-push] request_permission command called");
-
     #[cfg(target_os = "ios")]
     {
         let (tx, rx) = std::sync::mpsc::channel();
-        eprintln!("[mobile-push] spawning thread for FFI call...");
         std::thread::spawn(move || {
-            eprintln!("[mobile-push] thread started, calling mobile_push_request_permission...");
             let result = unsafe { mobile_push_request_permission() };
-            eprintln!("[mobile-push] FFI returned: {}", result);
             let _ = tx.send(result == 1);
         });
-        eprintln!("[mobile-push] waiting for FFI result...");
         let granted = rx.recv().unwrap_or(false);
-        eprintln!("[mobile-push] request_permission result: granted={}", granted);
         return Ok(PermissionResponse { granted });
     }
 
-    // Upstream 0.1.4 wrongly returned granted:false for all non-iOS targets,
-    // which broke Android even when the OS permission was already allowed.
+    // Upstream 0.1.4 wrongly returned granted:false for all non-iOS targets.
     #[cfg(target_os = "android")]
     {
         let state = app.state::<crate::mobile::MobilePush<R>>();
-        let result = state.request_permission()?;
-        eprintln!(
-            "[mobile-push] android request_permission result: granted={}",
-            result.granted
-        );
-        return Ok(result);
+        return Ok(state.request_permission()?);
     }
 
     #[cfg(not(any(target_os = "ios", target_os = "android")))]
@@ -66,16 +53,12 @@ pub(crate) async fn request_permission<R: Runtime>(
 
 #[command]
 pub(crate) async fn get_token<R: Runtime>(app: AppHandle<R>) -> Result<TokenResponse> {
-    eprintln!("[mobile-push] get_token command called");
-
     #[cfg(target_os = "ios")]
     {
         let (tx, rx) = std::sync::mpsc::channel();
         std::thread::spawn(move || {
-            eprintln!("[mobile-push] get_token thread: calling FFI...");
             let mut buffer = [0i8; 256];
             let result = unsafe { mobile_push_get_device_token(buffer.as_mut_ptr(), 256, 15) };
-            eprintln!("[mobile-push] get_token FFI returned: {}", result);
             if result > 0 {
                 let len = result as usize;
                 let bytes: Vec<u8> = buffer[..len].iter().map(|&b| b as u8).collect();
@@ -91,32 +74,18 @@ pub(crate) async fn get_token<R: Runtime>(app: AppHandle<R>) -> Result<TokenResp
         });
 
         return match rx.recv() {
-            Ok(Ok(token)) => {
-                eprintln!("[mobile-push] get_token success, len={}", token.len());
-                Ok(TokenResponse { token })
-            }
-            Ok(Err(e)) => {
-                eprintln!("[mobile-push] get_token error: {}", e);
-                Err(crate::Error::Io(std::io::Error::other(e)))
-            }
-            Err(_) => {
-                eprintln!("[mobile-push] get_token: thread panicked");
-                Err(crate::Error::Io(std::io::Error::other(
-                    "Token fetch thread panicked",
-                )))
-            }
+            Ok(Ok(token)) => Ok(TokenResponse { token }),
+            Ok(Err(e)) => Err(crate::Error::Io(std::io::Error::other(e))),
+            Err(_) => Err(crate::Error::Io(std::io::Error::other(
+                "Token fetch thread panicked",
+            ))),
         };
     }
 
     #[cfg(target_os = "android")]
     {
         let state = app.state::<crate::mobile::MobilePush<R>>();
-        let result = state.get_token()?;
-        eprintln!(
-            "[mobile-push] android get_token success, len={}",
-            result.token.len()
-        );
-        return Ok(result);
+        return Ok(state.get_token()?);
     }
 
     #[cfg(not(any(target_os = "ios", target_os = "android")))]

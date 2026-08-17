@@ -34,9 +34,6 @@ function resolveMobilePlatform(
  * - Desktop Tauri: local OS toasts on realtime events
  * - Mobile Tauri: remote push via APNs/FCM token registration
  * - Web: registration reserved for Web Push (endpoint stored on Device)
- *
- * Note: upstream tauri-plugin-mobile-push 0.1.4 returns granted:false on Android
- * from Rust; we vendor a patched copy under apps/desktop/vendor/.
  */
 export function useNotifications() {
   const api = useYfmApi();
@@ -56,20 +53,12 @@ export function useNotifications() {
     if (!pushEndpoint) {
       const mobilePush = await import('tauri-plugin-mobile-push-api');
       const permission = await mobilePush.requestPermission();
-      // On Android, still attempt getToken if the OS already granted notifications
-      // (settings toggle) even when the dialog path is flaky.
-      if (!permission.granted) {
-        console.warn('[push] requestPermission returned denied; trying getToken anyway');
-      }
       pushEndpoint = (await mobilePush.getToken()).trim();
       if (!pushEndpoint) {
-        if (!permission.granted) {
-          throw new Error(
-            'push permission denied — enable Notifications for YourFlareMails in Android settings, then reopen the app',
-          );
-        }
         throw new Error(
-          'empty push token — check google-services.json / FCM on the device',
+          permission.granted
+            ? 'empty push token — check google-services.json / FCM on the device'
+            : 'push permission denied',
         );
       }
 
@@ -88,12 +77,12 @@ export function useNotifications() {
                 mailboxId: lastRegistration.mailboxId,
                 pushEndpoint: token,
               };
-            } catch (err) {
-              console.warn('[push] token refresh re-register failed', err);
+            } catch {
+              // best-effort re-register
             }
           });
-        } catch (err) {
-          console.warn('[push] onTokenRefresh unavailable', err);
+        } catch {
+          // listener optional
         }
       }
     }
@@ -112,13 +101,6 @@ export function useNotifications() {
       mailboxId: input.mailboxId,
       pushEndpoint,
     };
-
-    console.info('[push] device registered', {
-      deviceId: result.device.id,
-      platform: registerPlatform,
-      mailboxId: input.mailboxId,
-      tokenPrefix: `${pushEndpoint.slice(0, 12)}…`,
-    });
 
     return result;
   }

@@ -227,7 +227,7 @@ async function notifyMailbox(env: Env, event: MailboxRealtimeEvent): Promise<voi
       : 'Your message was sent');
 
   try {
-    const pushResult = await notifyMailboxDevices(
+    await notifyMailboxDevices(
       { db: env.DB, push: createPushTransport(env) },
       event.mailboxId,
       {
@@ -242,7 +242,6 @@ async function notifyMailbox(env: Env, event: MailboxRealtimeEvent): Promise<voi
         },
       },
     );
-    console.log('[push] fan-out', pushResult);
   } catch (error) {
     console.error('[push] notify failed', error);
   }
