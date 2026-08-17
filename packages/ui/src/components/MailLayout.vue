@@ -73,7 +73,17 @@ function setSidebarOpen(open: boolean) {
             <line x1="6" y1="18" x2="18" y2="6" />
           </svg>
         </button>
-        <div class="yfm-mail-layout__brand">{{ brandName ?? 'Mail' }}</div>
+        <div class="yfm-mail-layout__brand">
+          <img
+            class="yfm-mail-layout__logo"
+            src="/logo.svg"
+            width="28"
+            height="28"
+            alt=""
+            aria-hidden="true"
+          />
+          <span>{{ brandName ?? 'Mail' }}</span>
+        </div>
       </div>
       <div class="yfm-mail-layout__header-actions">
         <slot name="header-actions" />
@@ -162,6 +172,9 @@ function setSidebarOpen(open: boolean) {
 .yfm-mail-layout__brand {
   margin: 0;
   min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   font-family: var(--yfm-font-display);
   font-size: 1.2rem;
   font-weight: 650;
@@ -169,6 +182,13 @@ function setSidebarOpen(open: boolean) {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.yfm-mail-layout__logo {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.4rem;
+  flex-shrink: 0;
 }
 
 .yfm-mail-layout__header-actions {

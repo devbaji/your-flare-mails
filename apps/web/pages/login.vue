@@ -52,12 +52,16 @@ async function onSubmit() {
 
 <template>
   <div v-if="!showForm" class="yfm-boot">
+    <img class="yfm-boot__logo" src="/logo.svg" width="48" height="48" alt="" aria-hidden="true" />
     <p class="yfm-boot__brand">{{ brandName }}</p>
     <p class="yfm-boot__status">Loading…</p>
   </div>
   <div v-else class="yfm-login">
     <header class="yfm-login__header">
-      <p class="yfm-login__brand">{{ brandName }}</p>
+      <p class="yfm-login__brand">
+        <img class="yfm-login__logo" src="/logo.svg" width="28" height="28" alt="" aria-hidden="true" />
+        <span>{{ brandName }}</span>
+      </p>
       <button
         type="button"
         class="yfm-login__theme"
@@ -169,6 +173,9 @@ async function onSubmit() {
 .yfm-login__brand {
   margin: 0;
   min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   font-family: var(--yfm-font-display);
   font-size: 1.2rem;
   font-weight: 650;
@@ -176,6 +183,13 @@ async function onSubmit() {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.yfm-login__logo {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.4rem;
+  flex-shrink: 0;
 }
 
 .yfm-login__theme {

@@ -468,6 +468,7 @@ function toggleColorMode() {
 
 <template>
   <div v-if="!authReady || !isAuthenticated()" class="yfm-boot">
+    <img class="yfm-boot__logo" src="/logo.svg" width="48" height="48" alt="" aria-hidden="true" />
     <p class="yfm-boot__brand">{{ brandName }}</p>
     <p class="yfm-boot__status">Loading…</p>
   </div>
