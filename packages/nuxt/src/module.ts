@@ -69,6 +69,7 @@ export default defineNuxtModule<YourFlareMailsModuleOptions>({
     }
 
     addPlugin(resolver.resolve('./runtime/plugin'));
+    addPlugin(resolver.resolve('./runtime/plugins/auth-bootstrap.client'));
     addImportsDir(resolver.resolve('./runtime/composables'));
   },
 });

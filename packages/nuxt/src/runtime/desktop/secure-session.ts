@@ -29,6 +29,17 @@ function writeLocal(key: string, value: string | null): void {
   }
 }
 
+/** Sync peek for first paint — avoids waiting on Tauri IPC / async load. */
+export function peekLocalSession(): {
+  sessionToken: string | null;
+  csrfToken: string | null;
+} {
+  return {
+    sessionToken: readLocal(LS_SESSION),
+    csrfToken: readLocal(LS_CSRF),
+  };
+}
+
 /**
  * Persist session for web refresh + Tauri (including Android, where OS keyring
  * is unreliable). Always writes localStorage; desktop Tauri also tries keyring.

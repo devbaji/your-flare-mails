@@ -12,7 +12,7 @@ import {
 
 const brandName = useRuntimeConfig().public.yourFlareMails.brandName as string;
 const api = useYfmApi();
-const { user, logout, refreshSession, isAuthenticated } = useAuth();
+const { user, logout, ensureSession, isAuthenticated, ready: authReady } = useAuth();
 
 const {
   mailboxes,
@@ -360,7 +360,7 @@ onMounted(async () => {
   updateViewport();
   window.addEventListener('resize', updateViewport);
 
-  await refreshSession();
+  await ensureSession();
   if (!isAuthenticated()) {
     await navigateTo('/login');
     return;
@@ -467,7 +467,12 @@ function toggleColorMode() {
 </script>
 
 <template>
+  <div v-if="!authReady || !isAuthenticated()" class="yfm-boot">
+    <p class="yfm-boot__brand">{{ brandName }}</p>
+    <p class="yfm-boot__status">Loading…</p>
+  </div>
   <MailLayout
+    v-else
     :brand-name="brandName"
     :mobile-pane="mobilePane"
     :mobile-nav="viewportCompact"

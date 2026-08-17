@@ -29,3 +29,28 @@ select,
 button {
   font-size: 16px;
 }
+
+.yfm-boot {
+  min-height: 100dvh;
+  display: grid;
+  place-content: center;
+  gap: 0.5rem;
+  padding: 1.5rem;
+  text-align: center;
+  background: var(--yfm-bg);
+  color: var(--yfm-fg);
+}
+
+.yfm-boot__brand {
+  margin: 0;
+  font-family: var(--yfm-font-display);
+  font-size: 1.35rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.yfm-boot__status {
+  margin: 0;
+  color: var(--yfm-fg-muted);
+  font-size: 0.9rem;
+}

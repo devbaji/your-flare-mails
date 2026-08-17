@@ -21,6 +21,12 @@ export default defineNuxtConfig({
   nitro: {
     preset: desktop ? 'static' : 'cloudflare_module',
   },
+  // Auth uses localStorage; keep these client-only to avoid SSR login flash.
+  routeRules: {
+    '/': { ssr: false },
+    '/login': { ssr: false },
+    '/mail/**': { ssr: false },
+  },
   alias: {
     '@your-flare-mails/ui/components': fileURLToPath(
       new URL('../../packages/ui/src/components.ts', import.meta.url),

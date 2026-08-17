@@ -1,10 +1,12 @@
 <script setup lang="ts">
 const brandName = useRuntimeConfig().public.yourFlareMails.brandName as string;
-const { login, pending, error, refreshSession, isAuthenticated } = useAuth();
+const { login, pending, error, ready, ensureSession, isAuthenticated } = useAuth();
 
 const email = ref('');
 const password = ref('');
 const colorMode = useState<'light' | 'dark'>('yfm-color-mode', () => 'light');
+
+const showForm = computed(() => ready.value && !isAuthenticated());
 
 function toggleColorMode() {
   const next = colorMode.value === 'dark' ? 'light' : 'dark';
@@ -20,8 +22,14 @@ function toggleColorMode() {
 }
 
 onMounted(async () => {
-  await refreshSession();
+  await ensureSession();
   if (isAuthenticated()) {
+    await navigateTo('/mail');
+  }
+});
+
+watch(ready, async (isReady) => {
+  if (isReady && isAuthenticated()) {
     await navigateTo('/mail');
   }
 });
@@ -37,7 +45,11 @@ async function onSubmit() {
 </script>
 
 <template>
-  <div class="yfm-login">
+  <div v-if="!showForm" class="yfm-boot">
+    <p class="yfm-boot__brand">{{ brandName }}</p>
+    <p class="yfm-boot__status">Loading…</p>
+  </div>
+  <div v-else class="yfm-login">
     <header class="yfm-login__header">
       <p class="yfm-login__brand">{{ brandName }}</p>
       <button

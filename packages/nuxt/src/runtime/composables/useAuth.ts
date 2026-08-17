@@ -4,9 +4,12 @@ import { useRouter, useState } from '#imports';
 import {
   clearDesktopSession,
   loadDesktopSession,
+  peekLocalSession,
   storeDesktopSession,
 } from '../desktop/secure-session.js';
 import { useYfmApi } from './useMailbox.js';
+
+let ensurePromise: Promise<UserDto | null> | null = null;
 
 export function useAuth() {
   const api = useYfmApi();
@@ -16,6 +19,17 @@ export function useAuth() {
   const csrfToken = useState<string | null>('yfm-csrf-token', () => null);
   const pending = useState('yfm-auth-pending', () => false);
   const error = useState<string | null>('yfm-auth-error', () => null);
+  /** False until the first session restore / /me attempt finishes. */
+  const ready = useState('yfm-auth-ready', () => false);
+
+  function hydrateFromStorage() {
+    if (sessionToken.value) return;
+    const peek = peekLocalSession();
+    if (peek.sessionToken) {
+      sessionToken.value = peek.sessionToken;
+      csrfToken.value = peek.csrfToken;
+    }
+  }
 
   async function login(email: string, password: string) {
     pending.value = true;
@@ -25,6 +39,7 @@ export function useAuth() {
       user.value = result.user;
       sessionToken.value = result.sessionToken;
       csrfToken.value = result.csrfToken;
+      ready.value = true;
       await storeDesktopSession({
         sessionToken: result.sessionToken,
         csrfToken: result.csrfToken,
@@ -47,11 +62,14 @@ export function useAuth() {
     user.value = null;
     sessionToken.value = null;
     csrfToken.value = null;
+    ready.value = true;
+    ensurePromise = null;
     await clearDesktopSession();
     await router.push('/login');
   }
 
   async function refreshSession() {
+    hydrateFromStorage();
     if (!sessionToken.value) {
       const stored = await loadDesktopSession();
       if (stored.sessionToken) {
@@ -86,15 +104,34 @@ export function useAuth() {
     }
   }
 
+  /** Single-flight bootstrap used by the client plugin and pages. */
+  async function ensureSession(): Promise<UserDto | null> {
+    if (ready.value) {
+      return user.value;
+    }
+    if (!ensurePromise) {
+      ensurePromise = (async () => {
+        try {
+          return await refreshSession();
+        } finally {
+          ready.value = true;
+        }
+      })();
+    }
+    return ensurePromise;
+  }
+
   return {
     user,
     sessionToken,
     csrfToken,
     pending,
     error,
+    ready,
     login,
     logout,
     refreshSession,
+    ensureSession,
     isAuthenticated: () => Boolean(user.value && sessionToken.value),
   };
 }
