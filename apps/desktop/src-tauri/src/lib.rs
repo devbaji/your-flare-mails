@@ -5,7 +5,7 @@ use tauri::{Manager, WindowEvent};
 const KEYRING_SERVICE: &str = "com.yourflaremails.desktop";
 const BRAND_NAME: &str = match option_env!("YFM_BRAND_NAME") {
     Some(name) if !name.is_empty() => name,
-    _ => "YourFlareMails",
+    _ => "Devbaji Mails",
 };
 
 #[tauri::command]

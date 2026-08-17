@@ -6,7 +6,7 @@ const desktop = process.env.YFM_DESKTOP === '1';
 const brandName =
   process.env.NUXT_PUBLIC_YFM_BRAND_NAME?.trim() ||
   process.env.YFM_BRAND_NAME?.trim() ||
-  'YourFlareMails';
+  'Devbaji Mails';
 
 export default defineNuxtConfig({
   compatibilityDate: '2025-01-01',

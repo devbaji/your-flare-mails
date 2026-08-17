@@ -30,7 +30,7 @@ export default defineNuxtModule<YourFlareMailsModuleOptions>({
   },
   defaults: {
     apiBaseUrl: 'http://127.0.0.1:8787',
-    brandName: 'YourFlareMails',
+    brandName: 'Devbaji Mails',
   },
   setup(options, nuxt) {
     const resolver = createResolver(import.meta.url);
@@ -44,7 +44,7 @@ export default defineNuxtModule<YourFlareMailsModuleOptions>({
       process.env.NUXT_PUBLIC_YFM_BRAND_NAME?.trim() ||
       process.env.YFM_BRAND_NAME?.trim() ||
       options.brandName ||
-      'YourFlareMails';
+      'Devbaji Mails';
 
     nuxt.options.runtimeConfig.public.yourFlareMails = {
       apiBaseUrl,

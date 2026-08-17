@@ -29,7 +29,7 @@ export function resolveBrandName(env = loadDeployEnv()) {
     process.env.NUXT_PUBLIC_YFM_BRAND_NAME?.trim() ||
     env.YFM_BRAND_NAME?.trim() ||
     env.NUXT_PUBLIC_YFM_BRAND_NAME?.trim() ||
-    'YourFlareMails'
+    'Devbaji Mails'
   );
 }
 
