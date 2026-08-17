@@ -35,7 +35,10 @@ if (!process.env.NUXT_PUBLIC_API_BASE_URL) {
 process.env.YFM_DESKTOP = '1';
 
 console.log(
-  `Building desktop/mobile SPA with NUXT_PUBLIC_API_BASE_URL=${process.env.NUXT_PUBLIC_API_BASE_URL}`,
+  `Building desktop/mobile SPA with NUXT_PUBLIC_API_BASE_URL=${process.env.NUXT_PUBLIC_API_BASE_URL}` +
+    (process.env.YFM_BRAND_NAME || process.env.NUXT_PUBLIC_YFM_BRAND_NAME
+      ? ` brand=${process.env.NUXT_PUBLIC_YFM_BRAND_NAME || process.env.YFM_BRAND_NAME}`
+      : ''),
 );
 
 const result = spawnSync('nuxt', ['generate'], {

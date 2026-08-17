@@ -5,11 +5,11 @@
   "type": "module",
   "description": "YourFlareMails Tauri 2 desktop shell",
   "scripts": {
-    "dev": "tauri dev",
-    "build": "tauri build",
-    "build:android": "tauri android build --apk --target aarch64",
+    "dev": "node ./scripts/with-brand-env.mjs tauri dev",
+    "build": "node ./scripts/with-brand-env.mjs tauri build",
+    "build:android": "node ./scripts/with-brand-env.mjs tauri android build --apk --target aarch64",
     "sign:android": "bash ./scripts/sign-apk.sh",
-    "tauri": "tauri",
+    "tauri": "node ./scripts/with-brand-env.mjs tauri",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "echo 'desktop lint: Rust checked via cargo; no JS eslint surface'",
     "test": "vitest run --passWithNoTests"

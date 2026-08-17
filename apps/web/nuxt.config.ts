@@ -3,6 +3,10 @@ import { fileURLToPath } from 'node:url';
 import { defineNuxtConfig } from 'nuxt/config';
 
 const desktop = process.env.YFM_DESKTOP === '1';
+const brandName =
+  process.env.NUXT_PUBLIC_YFM_BRAND_NAME?.trim() ||
+  process.env.YFM_BRAND_NAME?.trim() ||
+  'YourFlareMails';
 
 export default defineNuxtConfig({
   compatibilityDate: '2025-01-01',
@@ -12,7 +16,7 @@ export default defineNuxtConfig({
   ssr: !desktop,
   yourFlareMails: {
     apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8787',
-    brandName: 'YourFlareMails',
+    brandName,
   },
   nitro: {
     preset: desktop ? 'static' : 'cloudflare_module',
@@ -34,7 +38,7 @@ export default defineNuxtConfig({
   },
   app: {
     head: {
-      title: 'YourFlareMails',
+      title: brandName,
       meta: [
         {
           name: 'viewport',

@@ -40,12 +40,20 @@ export default defineNuxtModule<YourFlareMailsModuleOptions>({
       process.env.NUXT_PUBLIC_API_BASE_URL?.trim() ||
       options.apiBaseUrl ||
       'http://127.0.0.1:8787';
+    const brandName =
+      process.env.NUXT_PUBLIC_YFM_BRAND_NAME?.trim() ||
+      process.env.YFM_BRAND_NAME?.trim() ||
+      options.brandName ||
+      'YourFlareMails';
 
     nuxt.options.runtimeConfig.public.yourFlareMails = {
       apiBaseUrl,
-      brandName: options.brandName ?? 'YourFlareMails',
+      brandName,
     };
 
+    if (nuxt.options.app?.head && typeof nuxt.options.app.head === 'object') {
+      nuxt.options.app.head.title = brandName;
+    }
 
     nuxt.options.build = nuxt.options.build || {};
     nuxt.options.build.transpile = nuxt.options.build.transpile || [];

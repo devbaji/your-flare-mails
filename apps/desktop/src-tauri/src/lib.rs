@@ -3,6 +3,10 @@ use keyring::Entry;
 use tauri::{Manager, WindowEvent};
 
 const KEYRING_SERVICE: &str = "com.yourflaremails.desktop";
+const BRAND_NAME: &str = match option_env!("YFM_BRAND_NAME") {
+    Some(name) if !name.is_empty() => name,
+    _ => "YourFlareMails",
+};
 
 #[tauri::command]
 fn secret_set(key: String, value: String) -> Result<(), String> {
@@ -48,8 +52,8 @@ pub fn run() {
 
         builder = builder
             .setup(|app| {
-                let show_i =
-                    MenuItem::with_id(app, "show", "Show YourFlareMails", true, None::<&str>)?;
+                let show_label = format!("Show {BRAND_NAME}");
+                let show_i = MenuItem::with_id(app, "show", show_label, true, None::<&str>)?;
                 let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
                 let menu = Menu::with_items(app, &[&show_i, &quit_i])?;
 
@@ -60,7 +64,7 @@ pub fn run() {
                             .clone(),
                     )
                     .menu(&menu)
-                    .tooltip("YourFlareMails")
+                    .tooltip(BRAND_NAME)
                     .on_menu_event(|app, event| match event.id.as_ref() {
                         "quit" => {
                             app.exit(0);
@@ -102,5 +106,5 @@ pub fn run() {
 
     builder
         .run(tauri::generate_context!())
-        .expect("error while running YourFlareMails desktop");
+        .unwrap_or_else(|err| panic!("error while running {BRAND_NAME} desktop: {err}"));
 }

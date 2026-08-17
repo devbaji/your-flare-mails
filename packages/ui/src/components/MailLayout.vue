@@ -73,7 +73,7 @@ function setSidebarOpen(open: boolean) {
             <line x1="6" y1="18" x2="18" y2="6" />
           </svg>
         </button>
-        <div class="yfm-mail-layout__brand">{{ brandName ?? 'YourFlareMails' }}</div>
+        <div class="yfm-mail-layout__brand">{{ brandName ?? 'Mail' }}</div>
       </div>
       <div class="yfm-mail-layout__header-actions">
         <slot name="header-actions" />

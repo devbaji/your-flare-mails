@@ -39,7 +39,8 @@ Copy the printed `database_id`.
 
 ```bash
 cp config/deploy.example.env config/deploy.local.env
-# edit: D1_DATABASE_ID, hostnames, mailbox domain, CORS, NUXT_PUBLIC_API_BASE_URL
+# edit: D1_DATABASE_ID, hostnames, mailbox domain, CORS, NUXT_PUBLIC_API_BASE_URL,
+#       YFM_BRAND_NAME (web title + Android/desktop display name)
 ```
 
 ### 3. Generate Wrangler deploy configs
