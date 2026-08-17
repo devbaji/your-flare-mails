@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const brandName = useRuntimeConfig().public.yourFlareMails.brandName as string;
-const { login, pending, error, ready, ensureSession, isAuthenticated } = useAuth();
+const { login, pending, error, ready, ensureSession, refreshSession, sessionToken, isAuthenticated } =
+  useAuth();
 
 const email = ref('');
 const password = ref('');
@@ -22,7 +23,12 @@ function toggleColorMode() {
 }
 
 onMounted(async () => {
+  // Drop stale bootstrap errors (e.g. previous API-race "reading 'me'").
+  error.value = null;
   await ensureSession();
+  if (!isAuthenticated() && sessionToken.value) {
+    await refreshSession();
+  }
   if (isAuthenticated()) {
     await navigateTo('/mail');
   }

@@ -1,4 +1,4 @@
-import type { UserDto } from '@your-flare-mails/api-client';
+import { MailApiError, type UserDto } from '@your-flare-mails/api-client';
 import { useRouter, useState } from '#imports';
 
 import {
@@ -12,7 +12,6 @@ import { useYfmApi } from './useMailbox.js';
 let ensurePromise: Promise<UserDto | null> | null = null;
 
 export function useAuth() {
-  const api = useYfmApi();
   const router = useRouter();
   const user = useState<UserDto | null>('yfm-auth-user', () => null);
   const sessionToken = useState<string | null>('yfm-session-token', () => null);
@@ -21,6 +20,10 @@ export function useAuth() {
   const error = useState<string | null>('yfm-auth-error', () => null);
   /** False until the first session restore / /me attempt finishes. */
   const ready = useState('yfm-auth-ready', () => false);
+
+  function api() {
+    return useYfmApi();
+  }
 
   function hydrateFromStorage() {
     if (sessionToken.value) return;
@@ -35,11 +38,12 @@ export function useAuth() {
     pending.value = true;
     error.value = null;
     try {
-      const result = await api.login(email, password);
+      const result = await api().login(email, password);
       user.value = result.user;
       sessionToken.value = result.sessionToken;
       csrfToken.value = result.csrfToken;
       ready.value = true;
+      ensurePromise = null;
       await storeDesktopSession({
         sessionToken: result.sessionToken,
         csrfToken: result.csrfToken,
@@ -55,13 +59,14 @@ export function useAuth() {
 
   async function logout() {
     try {
-      await api.logout();
+      await api().logout();
     } catch {
       // clear local state even if network fails
     }
     user.value = null;
     sessionToken.value = null;
     csrfToken.value = null;
+    error.value = null;
     ready.value = true;
     ensurePromise = null;
     await clearDesktopSession();
@@ -79,12 +84,20 @@ export function useAuth() {
     }
     if (!sessionToken.value) {
       user.value = null;
+      error.value = null;
       return null;
     }
+
+    const client = api();
+    if (!client || typeof client.me !== 'function') {
+      // Don't wipe a valid stored session if the API plugin isn't ready yet.
+      throw new Error('API client not ready');
+    }
+
     pending.value = true;
     error.value = null;
     try {
-      const result = await api.me();
+      const result = await client.me();
       user.value = result.user;
       if (result.csrfToken) csrfToken.value = result.csrfToken;
       await storeDesktopSession({
@@ -93,11 +106,21 @@ export function useAuth() {
       });
       return result.user;
     } catch (err) {
-      user.value = null;
-      sessionToken.value = null;
-      csrfToken.value = null;
-      await clearDesktopSession();
-      error.value = err instanceof Error ? err.message : 'Session expired';
+      const status = err instanceof MailApiError ? err.status : 0;
+      const unauthorized = status === 401 || status === 403;
+      if (unauthorized) {
+        user.value = null;
+        sessionToken.value = null;
+        csrfToken.value = null;
+        await clearDesktopSession();
+        error.value = null;
+      } else if (err instanceof Error && err.message === 'API client not ready') {
+        // Leave tokens in place for a later retry.
+        throw err;
+      } else {
+        // Network / server blip — keep tokens, surface a soft message only if useful.
+        error.value = err instanceof Error ? err.message : 'Session check failed';
+      }
       return null;
     } finally {
       pending.value = false;
@@ -113,6 +136,13 @@ export function useAuth() {
       ensurePromise = (async () => {
         try {
           return await refreshSession();
+        } catch (err) {
+          // Allow a later page-level retry if the API plugin raced.
+          if (err instanceof Error && err.message === 'API client not ready') {
+            ensurePromise = null;
+            return null;
+          }
+          return null;
         } finally {
           ready.value = true;
         }

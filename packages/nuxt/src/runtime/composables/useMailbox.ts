@@ -2,7 +2,11 @@ import type { MailApiClient } from '@your-flare-mails/api-client';
 import { useNuxtApp, useState } from '#imports';
 
 export function useYfmApi(): MailApiClient {
-  return useNuxtApp().$yfmApi as MailApiClient;
+  const api = useNuxtApp().$yfmApi as MailApiClient | undefined;
+  if (!api) {
+    throw new Error('API client not ready');
+  }
+  return api;
 }
 
 export function useMailbox() {
