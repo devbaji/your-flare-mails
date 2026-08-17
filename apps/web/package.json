@@ -16,6 +16,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@your-flare-mails/api-client": "workspace:*",
     "@your-flare-mails/nuxt": "workspace:*",
     "@your-flare-mails/theme": "workspace:*",
     "@your-flare-mails/ui": "workspace:*",

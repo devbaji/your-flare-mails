@@ -61,7 +61,9 @@ export function applyCorsHeaders(
   response: Response,
   allowedOrigins: string[],
 ): Response {
-  if (response.status === 101 || response.webSocket != null) {
+  // Status 101 = WebSocket upgrade. Don't clone: Fetch Response only allows
+  // 200–599, and cloning would drop the Cloudflare `webSocket` handle.
+  if (response.status === 101) {
     return response;
   }
   const origin = request.headers.get('origin');
