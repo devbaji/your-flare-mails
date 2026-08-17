@@ -24,7 +24,21 @@ export type MessageDetail = {
   recipients: MessageRecipient[];
   attachments: Attachment[];
   bodyText: string | null;
+  bodyHtml: string | null;
 };
+
+async function readR2Text(
+  r2: R2BucketLike,
+  key: string,
+): Promise<string | null> {
+  const blobs = new R2BlobStore(r2);
+  const obj = await blobs.getObject(key);
+  if (!obj?.body) return null;
+  if (obj.body instanceof ArrayBuffer) {
+    return new TextDecoder().decode(obj.body);
+  }
+  return new Response(obj.body).text();
+}
 
 export async function getMessage(
   deps: MessageServiceDeps,
@@ -38,15 +52,12 @@ export async function getMessage(
 
   let bodyText = message.bodyText;
   if (!bodyText && message.bodyTextR2Key && deps.r2) {
-    const blobs = new R2BlobStore(deps.r2);
-    const obj = await blobs.getObject(message.bodyTextR2Key);
-    if (obj?.body) {
-      if (obj.body instanceof ArrayBuffer) {
-        bodyText = new TextDecoder().decode(obj.body);
-      } else {
-        bodyText = await new Response(obj.body).text();
-      }
-    }
+    bodyText = await readR2Text(deps.r2, message.bodyTextR2Key);
+  }
+
+  let bodyHtml: string | null = null;
+  if (message.bodyHtmlR2Key && deps.r2) {
+    bodyHtml = await readR2Text(deps.r2, message.bodyHtmlR2Key);
   }
 
   const [recipients, attachments] = await Promise.all([
@@ -59,6 +70,7 @@ export async function getMessage(
     recipients,
     attachments,
     bodyText,
+    bodyHtml,
   };
 }
 

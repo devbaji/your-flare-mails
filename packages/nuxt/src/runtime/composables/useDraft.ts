@@ -31,6 +31,7 @@ export function useDraft() {
   const cc = useState('yfm-compose-cc', () => '');
   const subject = useState('yfm-compose-subject', () => '');
   const bodyText = useState('yfm-compose-body', () => '');
+  const bodyHtml = useState('yfm-compose-body-html', () => '');
   const mode = useState<'compose' | 'reply' | 'forward'>('yfm-compose-mode', () => 'compose');
   const open = useState('yfm-compose-open', () => false);
   const saving = useState('yfm-compose-saving', () => false);
@@ -46,6 +47,7 @@ export function useDraft() {
     cc.value = formatAddressList(next.ccJson);
     subject.value = next.subject ?? '';
     bodyText.value = next.bodyText ?? '';
+    bodyHtml.value = next.bodyHtml ?? '';
     mode.value = nextMode;
     open.value = true;
     errorMessage.value = null;
@@ -57,6 +59,7 @@ export function useDraft() {
       to: [],
       subject: '',
       bodyText: '',
+      bodyHtml: '',
     });
     hydrateFromDraft(result.draft, 'compose');
   }
@@ -86,6 +89,7 @@ export function useDraft() {
         cc: parseAddressList(cc.value),
         subject: subject.value,
         bodyText: bodyText.value,
+        bodyHtml: bodyHtml.value || null,
       });
       draft.value = result.draft;
       statusMessage.value = `Saved ${new Date(result.draft.updatedAt).toLocaleTimeString()}`;
@@ -117,6 +121,7 @@ export function useDraft() {
         cc: parseAddressList(cc.value),
         subject: subject.value,
         bodyText: bodyText.value,
+        bodyHtml: bodyHtml.value || undefined,
       });
       if (!result.ok) {
         errorMessage.value = result.error ?? 'Send failed';
@@ -161,6 +166,7 @@ export function useDraft() {
     cc,
     subject,
     bodyText,
+    bodyHtml,
     mode,
     open,
     saving,

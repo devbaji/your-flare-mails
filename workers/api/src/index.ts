@@ -41,6 +41,7 @@ import {
   getDraft,
   getMailbox,
   getMessage,
+  applyThreadFolderAction,
   getThread,
   hashIp,
   ingestEmail,
@@ -684,6 +685,19 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
     const threadMatch = match(pathname, /^\/api\/threads\/([^/]+)$/);
     if (request.method === 'GET' && threadMatch) {
       return json({ thread: await getThread(deps, ctx, threadMatch[1]!) });
+    }
+
+    const threadFolderMatch = match(
+      pathname,
+      /^\/api\/threads\/([^/]+)\/(archive|trash|inbox)$/,
+    );
+    if (request.method === 'POST' && threadFolderMatch) {
+      assertCsrf(auth, request);
+      const threadId = threadFolderMatch[1]!;
+      const action = threadFolderMatch[2] as 'archive' | 'trash' | 'inbox';
+      return json({
+        thread: await applyThreadFolderAction(deps, ctx, threadId, action),
+      });
     }
 
     const threadMessagesMatch = match(

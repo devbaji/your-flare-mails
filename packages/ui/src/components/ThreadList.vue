@@ -48,7 +48,7 @@ function formatWhen(value: string | null): string {
         <span>{{ formatWhen(thread.lastMessageAt) }}</span>
       </div>
       <p>{{ thread.snippet || ' ' }}</p>
-      <small>{{ thread.messageCount }} messages</small>
+      <small v-if="thread.messageCount > 0">{{ thread.messageCount }} messages</small>
     </button>
   </div>
 </template>

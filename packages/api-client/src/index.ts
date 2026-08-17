@@ -75,6 +75,7 @@ export type MessageDetailDto = {
     createdAt: string;
   }>;
   bodyText: string | null;
+  bodyHtml: string | null;
 };
 
 export type SearchHitDto = {
@@ -244,6 +245,21 @@ export function createMailApiClient(options: MailApiClientOptions) {
     },
     getThread: (id: string) =>
       request<{ thread: ThreadDto }>(`/api/threads/${encodeURIComponent(id)}`),
+    archiveThread: (id: string) =>
+      request<{ thread: ThreadDto }>(
+        `/api/threads/${encodeURIComponent(id)}/archive`,
+        { method: 'POST' },
+      ),
+    trashThread: (id: string) =>
+      request<{ thread: ThreadDto }>(
+        `/api/threads/${encodeURIComponent(id)}/trash`,
+        { method: 'POST' },
+      ),
+    moveThreadToInbox: (id: string) =>
+      request<{ thread: ThreadDto }>(
+        `/api/threads/${encodeURIComponent(id)}/inbox`,
+        { method: 'POST' },
+      ),
     listThreadMessages: (id: string) =>
       request<{ messages: MessageDto[] }>(
         `/api/threads/${encodeURIComponent(id)}/messages`,

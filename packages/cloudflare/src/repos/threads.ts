@@ -50,6 +50,63 @@ export class ThreadRepository {
     return row ? mapThread(row) : null;
   }
 
+  async findLabelId(mailboxId: string, slug: string): Promise<string | null> {
+    const row = await this.db
+      .prepare(
+        `SELECT id FROM labels WHERE mailbox_id = ? AND slug = ? LIMIT 1`,
+      )
+      .bind(mailboxId, slug)
+      .first<{ id: string }>();
+    return row?.id ?? null;
+  }
+
+  async removeThreadLabels(threadId: string, labelIds: string[]): Promise<void> {
+    if (!labelIds.length) return;
+    const stmts = labelIds.map((labelId) =>
+      this.db
+        .prepare(`DELETE FROM thread_labels WHERE thread_id = ? AND label_id = ?`)
+        .bind(threadId, labelId),
+    );
+    await this.db.batch(stmts);
+  }
+
+  async addThreadLabel(threadId: string, labelId: string, nowIso: string): Promise<void> {
+    await this.db
+      .prepare(
+        `INSERT OR IGNORE INTO thread_labels (thread_id, label_id, created_at) VALUES (?, ?, ?)`,
+      )
+      .bind(threadId, labelId, nowIso)
+      .run();
+  }
+
+  /**
+   * Move a thread between system folders by adjusting thread_labels.
+   * Removes `removeSlugs`, then ensures `addSlug` is present.
+   */
+  async moveSystemLabels(
+    mailboxId: string,
+    threadId: string,
+    removeSlugs: string[],
+    addSlug: string,
+    nowIso: string,
+  ): Promise<void> {
+    const removeIds: string[] = [];
+    for (const slug of removeSlugs) {
+      const id = await this.findLabelId(mailboxId, slug);
+      if (id) removeIds.push(id);
+    }
+    const addId = await this.findLabelId(mailboxId, addSlug);
+    if (!addId) {
+      throw new Error(`system label missing: ${addSlug}`);
+    }
+    await this.removeThreadLabels(threadId, removeIds);
+    await this.addThreadLabel(threadId, addId, nowIso);
+    await this.db
+      .prepare(`UPDATE threads SET updated_at = ? WHERE id = ?`)
+      .bind(nowIso, threadId)
+      .run();
+  }
+
   async list(options: ListThreadsOptions): Promise<Thread[]> {
     const limit = Math.min(Math.max(options.limit ?? 50, 1), 100);
     const before = options.before ?? null;
