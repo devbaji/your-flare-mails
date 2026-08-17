@@ -94,6 +94,11 @@ Optional: set `FORCE_MOCK_TRANSPORT=false` in `config/deploy.local.env`, re-run
 `pnpm deploy:configure`, then `pnpm deploy:api` after Email Sending is onboarded
 (see below).
 
+For **Android push notifications**, set `FORCE_MOCK_PUSH=false`, put
+`FCM_SERVICE_ACCOUNT_JSON` via `wrangler secret put`, place
+`google-services.json` in the Android app, then `pnpm build:android`. Full
+checklist: [mobile.md](./mobile.md).
+
 ### 7. Inbound email (Email Routing → Worker)
 
 ```bash

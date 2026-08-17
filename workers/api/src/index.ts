@@ -11,6 +11,7 @@ import {
   CloudflareEmailTransport,
   CloudflarePushTransport,
   MailboxRealtime,
+  MessageRepository,
   MockPushTransport,
   consumeRateLimit,
   notifyMailboxRealtime,
@@ -210,13 +211,23 @@ async function notifyMailbox(env: Env, event: MailboxRealtimeEvent): Promise<voi
     return;
   }
 
+  let subject: string | null = null;
+  try {
+    const message = await new MessageRepository(env.DB).findById(event.messageId);
+    subject = message?.subject?.trim() || null;
+  } catch (error) {
+    console.error('[push] subject lookup failed', error);
+  }
+
   const title = event.type === 'message.created' ? 'New mail' : 'Message sent';
   const body =
-    event.type === 'message.created'
+    subject ||
+    (event.type === 'message.created'
       ? 'A new message arrived in your mailbox'
-      : 'Your message was sent';
+      : 'Your message was sent');
+
   try {
-    await notifyMailboxDevices(
+    const pushResult = await notifyMailboxDevices(
       { db: env.DB, push: createPushTransport(env) },
       event.mailboxId,
       {
@@ -227,9 +238,11 @@ async function notifyMailbox(env: Env, event: MailboxRealtimeEvent): Promise<voi
           mailboxId: event.mailboxId,
           messageId: event.messageId,
           threadId: event.threadId,
+          subject: subject ?? '',
         },
       },
     );
+    console.log('[push] fan-out', pushResult);
   } catch (error) {
     console.error('[push] notify failed', error);
   }
@@ -305,7 +318,14 @@ async function enforceRateLimit(
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
-    const corsOrigins = parseCorsOrigins(env.CORS_ORIGINS, DEFAULT_CORS);
+    // Always include DEFAULT_CORS (Tauri Android/iOS webview origins) so APK/IPA
+    // API calls work even when CORS_ORIGINS is set to the public web origin only.
+    const corsOrigins = [
+      ...new Set([
+        ...DEFAULT_CORS,
+        ...parseCorsOrigins(env.CORS_ORIGINS, []),
+      ]),
+    ];
     const preflight = corsPreflightResponse(request, corsOrigins);
     if (preflight) return preflight;
 

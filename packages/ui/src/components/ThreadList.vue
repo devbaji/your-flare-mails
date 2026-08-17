@@ -25,8 +25,6 @@ function formatWhen(value: string | null): string {
   return date.toLocaleString(undefined, {
     month: 'short',
     day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
   });
 }
 </script>
@@ -61,15 +59,27 @@ function formatWhen(value: string | null): string {
 
 .yfm-thread-list__item {
   width: 100%;
+  max-width: 100%;
   appearance: none;
   border: 0;
   border-bottom: 1px solid var(--yfm-border);
   background: transparent;
   text-align: left;
-  padding: 0.9rem 1rem;
+  padding: 0.9rem 0.85rem;
   cursor: pointer;
   color: inherit;
   font: inherit;
+  overflow: hidden;
+}
+
+@media (max-width: 960px) {
+  .yfm-thread-list__item {
+    padding: 0.75rem 0.7rem;
+  }
+
+  .yfm-thread-list__empty {
+    padding: 0.85rem;
+  }
 }
 
 .yfm-thread-list__item:hover,
@@ -86,12 +96,22 @@ function formatWhen(value: string | null): string {
   justify-content: space-between;
   gap: 0.75rem;
   margin-bottom: 0.35rem;
+  min-width: 0;
+}
+
+.yfm-thread-list__row strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .yfm-thread-list__row span,
 .yfm-thread-list__item small {
   color: var(--yfm-fg-muted);
   font-size: 0.8rem;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .yfm-thread-list__item p {

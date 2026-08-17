@@ -60,6 +60,21 @@ const safeHtml = computed(() =>
   padding: 1.5rem;
 }
 
+@media (max-width: 960px) {
+  .yfm-viewer {
+    padding: 0.75rem 0.85rem 1.25rem;
+  }
+
+  .yfm-viewer h1 {
+    font-size: 1.25rem;
+  }
+
+  .yfm-viewer header {
+    margin-bottom: 0.85rem;
+    padding-bottom: 0.75rem;
+  }
+}
+
 .yfm-viewer header {
   margin-bottom: 1.25rem;
   padding-bottom: 1rem;

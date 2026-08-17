@@ -1,4 +1,4 @@
-import { isTauri } from './platform.js';
+import { isMobileTauri, isTauri } from './platform.js';
 
 export type NotifyInput = {
   title: string;
@@ -8,15 +8,18 @@ export type NotifyInput = {
 type RealtimeNotifyEvent = {
   type: string;
   messageId?: string;
+  subject?: string | null;
 };
 
 /**
  * Cross-platform notification helper.
  * Desktop (Tauri): OS notification plugin while the app is running.
- * Browser: no-op in Phase 9 (Web Push is a later enhancement).
+ * Mobile: skip — remote FCM/APNs handles background; local toasts on open
+ * caused confusing "Message msg_…" spam.
+ * Browser: no-op (Web Push later).
  */
 export async function notifyLocal(input: NotifyInput): Promise<void> {
-  if (!isTauri()) return;
+  if (!isTauri() || isMobileTauri()) return;
   try {
     const {
       isPermissionGranted,
@@ -37,17 +40,21 @@ export async function notifyLocal(input: NotifyInput): Promise<void> {
 
 export function notifyFromRealtimeEvent(event: RealtimeNotifyEvent): void {
   if (event.type === 'ping') return;
-  if (event.type === 'message.created' && event.messageId) {
+  // Mobile uses FCM remote push while closed; don't duplicate on reconnect.
+  if (isMobileTauri()) return;
+
+  const subject = event.subject?.trim();
+  if (event.type === 'message.created') {
     void notifyLocal({
       title: 'New mail',
-      body: `Message ${event.messageId} arrived`,
+      body: subject || 'A new message arrived in your mailbox',
     });
     return;
   }
-  if (event.type === 'message.sent' && event.messageId) {
+  if (event.type === 'message.sent') {
     void notifyLocal({
       title: 'Message sent',
-      body: `Message ${event.messageId} was sent`,
+      body: subject || 'Your message was sent',
     });
   }
 }

@@ -26,6 +26,12 @@ config/deploy.local.env
 apps/web/.env.production.local
 infra/seed/seed-prod.sql
 
+# Android release signing (never commit)
+apps/desktop/android-release.keystore
+apps/desktop/*.keystore
+apps/desktop/*.jks
+apps/desktop/android-keystore.properties
+
 # Wrangler auth / local caches (also covered by .wrangler/)
 .wrangler/state/
 

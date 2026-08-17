@@ -3,7 +3,18 @@
  */
 export function isTauri(): boolean {
   if (typeof window === 'undefined') return false;
-  return '__TAURI_INTERNALS__' in window || '__TAURI__' in window;
+  const w = window as Window & {
+    isTauri?: boolean;
+    __TAURI_INTERNALS__?: unknown;
+    __TAURI__?: unknown;
+  };
+  return Boolean(
+    w.isTauri ||
+      w.__TAURI_INTERNALS__ ||
+      w.__TAURI__ ||
+      '__TAURI_INTERNALS__' in w ||
+      '__TAURI__' in w,
+  );
 }
 
 /**
@@ -14,8 +25,11 @@ export function detectClientPlatform(): 'web' | 'desktop' | 'ios' | 'android' {
   const ua = navigator.userAgent || '';
   if (/android/i.test(ua)) return 'android';
   if (/iPhone|iPad|iPod/i.test(ua)) return 'ios';
+  // Some Android WebViews omit "Android" but expose Linux + Mobile.
+  if (isTauri() && /Mobile|wv\)/i.test(ua) && /Linux/i.test(ua)) {
+    return 'android';
+  }
   if (isTauri()) {
-    // Desktop Tauri webview (mobile Tauri uses mobile UA above).
     return 'desktop';
   }
   return 'web';
@@ -24,5 +38,9 @@ export function detectClientPlatform(): 'web' | 'desktop' | 'ios' | 'android' {
 export function isMobileTauri(): boolean {
   if (!isTauri()) return false;
   const platform = detectClientPlatform();
-  return platform === 'ios' || platform === 'android';
+  if (platform === 'ios' || platform === 'android') return true;
+  // WebView UAs vary; treat non-desktop Tauri as mobile when clearly a phone.
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  return /Mobile|Android|iPhone|iPad/i.test(ua);
 }

@@ -1,13 +1,13 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "YourFlareMails",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "identifier": "com.yourflaremails.desktop",
   "build": {
     "beforeDevCommand": "pnpm --dir ../.. --filter @your-flare-mails/web dev",
     "devUrl": "http://127.0.0.1:3000",
     "beforeBuildCommand": "pnpm --dir ../.. --filter @your-flare-mails/web run build:desktop",
-    "frontendDist": "../web/.output/public"
+    "frontendDist": "../../web/.output/public"
   },
   "app": {
     "withGlobalTauri": true,
@@ -22,7 +22,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; connect-src 'self' http://127.0.0.1:8787 http://localhost:8787 ws://127.0.0.1:8787 ws://localhost:8787 http://tauri.localhost https://tauri.localhost ipc: http://ipc.localhost; script-src 'self'"
+      "csp": "default-src 'self'; img-src 'self' data: https: blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; connect-src 'self' http://127.0.0.1:8787 http://localhost:8787 ws://127.0.0.1:8787 ws://localhost:8787 http://tauri.localhost https://tauri.localhost ipc: http://ipc.localhost https: wss:; script-src 'self'"
     }
   },
   "bundle": {

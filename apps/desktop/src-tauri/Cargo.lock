@@ -3608,8 +3608,6 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-mobile-push"
 version = "0.1.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9ab15008b7d1b350e7021d8afe434b17d670cb54e9ff1baa0e4b55392d265aa3"
 dependencies = [
  "log",
  "serde",
@@ -5033,7 +5031,7 @@ dependencies = [
 
 [[package]]
 name = "your-flare-mails-desktop"
-version = "0.0.0"
+version = "0.0.1"
 dependencies = [
  "keyring",
  "serde",

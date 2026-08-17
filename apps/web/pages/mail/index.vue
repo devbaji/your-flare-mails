@@ -40,6 +40,7 @@ const drafts = useState<DraftDto[]>('yfm-drafts-list', () => []);
 const draftsPending = useState('yfm-drafts-pending', () => false);
 const draftsError = useState<string | null>('yfm-drafts-error', () => null);
 const mobilePane = useState<'list' | 'reader'>('yfm-mobile-pane', () => 'list');
+const sidebarOpen = useState('yfm-sidebar-open', () => false);
 const folderActionPending = useState('yfm-folder-action-pending', () => false);
 const folderActionError = useState<string | null>('yfm-folder-action-error', () => null);
 
@@ -369,14 +370,64 @@ onMounted(async () => {
   await refreshThreads();
   await refreshDraftsList();
 
-  const { isMobile, registerPushDevice } = useNotifications();
-  if (isMobile() && currentId.value) {
+  await ensurePushRegistration();
+});
+
+const pushStatus = useState<string | null>('yfm-push-status', () => null);
+
+async function waitForTauri(timeoutMs = 12000): Promise<boolean> {
+  const { isTauri } = useNotifications();
+  if (isTauri()) return true;
+  const started = Date.now();
+  while (Date.now() - started < timeoutMs) {
+    await new Promise((r) => setTimeout(r, 250));
+    if (isTauri()) return true;
+  }
+  return isTauri();
+}
+
+async function ensurePushRegistration() {
+  const { registerPushDevice, detectClientPlatform, isTauri } = useNotifications();
+  pushStatus.value = 'checking runtime…';
+
+  const ready = await waitForTauri();
+  if (!ready) {
+    pushStatus.value = `not tauri (${detectClientPlatform()})`;
+    return;
+  }
+
+  const mailboxId = currentId.value;
+  if (!mailboxId) {
+    pushStatus.value = 'waiting for mailbox…';
+    return;
+  }
+
+  // FCM token / Tauri IPC can lag on cold start — retry generously.
+  for (let attempt = 1; attempt <= 8; attempt += 1) {
     try {
-      await registerPushDevice({ mailboxId: currentId.value });
+      pushStatus.value = `registering (${attempt}) · ${detectClientPlatform()}`;
+      await registerPushDevice({ mailboxId });
+      pushStatus.value = 'push registered';
+      return;
     } catch (err) {
-      console.warn('[push] registration skipped', err);
+      const message = err instanceof Error ? err.message : String(err);
+      console.warn('[push] registration failed', message, {
+        tauri: isTauri(),
+        platform: detectClientPlatform(),
+      });
+      pushStatus.value = message;
+      if (attempt < 8) await new Promise((r) => setTimeout(r, 1000 * attempt));
     }
   }
+}
+
+function selectLabelAndClose(slug: string) {
+  selectLabel(slug);
+  sidebarOpen.value = false;
+}
+
+watch(currentId, async (id, prev) => {
+  if (id && id !== prev) await ensurePushRegistration();
 });
 
 onBeforeUnmount(() => {
@@ -418,72 +469,42 @@ const showArchive = computed(
   () => labelSlug.value === 'inbox' || labelSlug.value === 'sent',
 );
 const showTrash = computed(() => labelSlug.value !== 'trash');
+
+const colorMode = useState<'light' | 'dark'>('yfm-color-mode', () => 'light');
+
+function toggleColorMode() {
+  const next = colorMode.value === 'dark' ? 'light' : 'dark';
+  colorMode.value = next;
+  if (import.meta.client) {
+    document.documentElement.classList.toggle('dark', next === 'dark');
+    try {
+      localStorage.setItem('yfm-color-mode', next);
+    } catch {
+      // ignore
+    }
+  }
+}
 </script>
 
 <template>
   <MailLayout
     :brand-name="brandName"
     :mobile-pane="mobilePane"
-    :compact-sidebar="viewportCompact"
+    :mobile-nav="viewportCompact"
+    v-model:sidebar-open="sidebarOpen"
   >
-    <template #sidebar>
-      <p v-if="currentMailbox && !viewportCompact" class="yfm-mail-address">
-        {{ currentMailbox.address }}
-      </p>
+    <template #header-actions>
+      <span v-if="viewportCompact && pushStatus" class="yfm-push-chip" :title="pushStatus">
+        {{ pushStatus }}
+      </span>
       <button
-        v-if="!viewportCompact"
         type="button"
-        class="yfm-compose-btn"
-        @click="onComposeNew"
-      >
-        Compose
-      </button>
-      <button
-        v-else
-        type="button"
-        class="yfm-compose-fab"
-        aria-label="Compose"
-        title="Compose"
-        @click="onComposeNew"
+        class="yfm-theme-toggle"
+        :aria-label="colorMode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'"
+        @click="toggleColorMode"
       >
         <svg
-          viewBox="0 0 24 24"
-          width="20"
-          height="20"
-          aria-hidden="true"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <path d="M12 5v14M5 12h14" />
-        </svg>
-      </button>
-      <MailSidebar
-        :labels="labels"
-        :active-slug="labelSlug"
-        :compact="viewportCompact"
-        @select="selectLabel"
-      />
-      <p v-if="user && !viewportCompact" class="yfm-muted yfm-user">{{ user.email }}</p>
-      <button
-        v-if="!viewportCompact"
-        type="button"
-        class="yfm-logout-btn"
-        @click="logout()"
-      >
-        Sign out
-      </button>
-      <button
-        v-else
-        type="button"
-        class="yfm-logout-icon"
-        aria-label="Sign out"
-        title="Sign out"
-        @click="logout()"
-      >
-        <svg
+          v-if="colorMode === 'dark'"
           viewBox="0 0 24 24"
           width="18"
           height="18"
@@ -494,15 +515,55 @@ const showTrash = computed(() => labelSlug.value !== 'trash');
           stroke-linecap="round"
           stroke-linejoin="round"
         >
-          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-          <polyline points="16 17 21 12 16 7" />
-          <line x1="21" y1="12" x2="9" y2="12" />
+          <circle cx="12" cy="12" r="4" />
+          <path
+            d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"
+          />
+        </svg>
+        <svg
+          v-else
+          viewBox="0 0 24 24"
+          width="18"
+          height="18"
+          aria-hidden="true"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.75"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M21 14.5A8.5 8.5 0 1 1 12.5 3a7 7 0 0 0 8.5 11.5z" />
         </svg>
       </button>
+    </template>
+
+    <template #sidebar>
+      <p v-if="currentMailbox" class="yfm-mail-address">
+        {{ currentMailbox.address }}
+      </p>
+      <button
+        type="button"
+        class="yfm-compose-btn"
+        @click="
+          onComposeNew();
+          sidebarOpen = false;
+        "
+      >
+        Compose
+      </button>
+      <MailSidebar
+        :labels="labels"
+        :active-slug="labelSlug"
+        :compact="false"
+        @select="selectLabelAndClose"
+      />
+      <p v-if="user" class="yfm-muted yfm-user">{{ user.email }}</p>
+      <button type="button" class="yfm-logout-btn" @click="logout()">Sign out</button>
       <p v-if="mailboxError" class="yfm-error">{{ mailboxError }}</p>
-      <p v-if="mailboxPending && !viewportCompact" class="yfm-muted">Loading mailbox…</p>
-      <p v-if="!viewportCompact" class="yfm-muted yfm-realtime">
+      <p v-if="mailboxPending" class="yfm-muted">Loading mailbox…</p>
+      <p class="yfm-muted yfm-realtime">
         Realtime: {{ realtimeTransport }}
+        <template v-if="pushStatus"> · Push: {{ pushStatus }}</template>
       </p>
     </template>
 
@@ -510,6 +571,7 @@ const showTrash = computed(() => labelSlug.value !== 'trash');
       <SearchBar
         v-model="searchText"
         :loading="searchPending"
+        :compact="viewportCompact"
         @submit="runSearch"
         @clear="clearSearch"
       />
@@ -666,6 +728,38 @@ const showTrash = computed(() => labelSlug.value !== 'trash');
 </template>
 
 <style scoped>
+.yfm-theme-toggle {
+  appearance: none;
+  border: 1px solid var(--yfm-border);
+  background: var(--yfm-bg-elevated);
+  color: var(--yfm-fg-muted);
+  border-radius: var(--yfm-radius);
+  width: 2.25rem;
+  height: 2.25rem;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.yfm-push-chip {
+  max-width: 7.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.65rem;
+  line-height: 1.2;
+  color: var(--yfm-fg-muted);
+  border: 1px solid var(--yfm-border);
+  border-radius: 999px;
+  padding: 0.25rem 0.45rem;
+}
+
+.yfm-theme-toggle:hover {
+  color: var(--yfm-fg);
+  border-color: var(--yfm-accent);
+}
+
 .yfm-mail-address {
   margin: 0 0 1rem;
   color: var(--yfm-fg-muted);
@@ -773,16 +867,45 @@ const showTrash = computed(() => labelSlug.value !== 'trash');
 
 .yfm-reading {
   min-height: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .yfm-reading__split {
   display: grid;
-  grid-template-columns: minmax(12rem, 16rem) 1fr;
-  min-height: calc(100vh - 4rem);
+  grid-template-columns: minmax(0, 16rem) minmax(0, 1fr);
+  min-height: calc(100dvh - 8rem);
+  max-width: 100%;
 }
 
 .yfm-reading__split > :first-child {
   border-right: 1px solid var(--yfm-border);
+}
+
+@media (max-width: 960px) {
+  .yfm-pane-header {
+    padding: 0.65rem 0.75rem 0.35rem;
+  }
+
+  .yfm-mobile-nav {
+    padding: 0.5rem 0.75rem 0;
+  }
+
+  .yfm-muted,
+  .yfm-empty {
+    padding: 0.75rem;
+  }
+
+  .yfm-reading__split {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .yfm-reading__split > :first-child {
+    border-right: none;
+    border-bottom: 1px solid var(--yfm-border);
+  }
 }
 
 .yfm-muted,

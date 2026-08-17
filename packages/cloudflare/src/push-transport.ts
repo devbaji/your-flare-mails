@@ -261,7 +261,12 @@ export class CloudflarePushTransport implements PushTransport {
               title: message.title,
               body: message.body,
             },
-            data: message.data ?? {},
+            data: Object.fromEntries(
+              Object.entries(message.data ?? {}).map(([k, v]) => [k, String(v)]),
+            ),
+            android: {
+              priority: 'HIGH',
+            },
           },
         }),
       },

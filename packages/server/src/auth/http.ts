@@ -52,12 +52,18 @@ export async function hashIp(ip: string): Promise<string> {
 /**
  * Reflect CORS for credentialed browser clients (Nuxt on another local port).
  * Never use `*` when credentials are involved.
+ *
+ * Do not rebuild WebSocket upgrade responses: status 101 is outside the Fetch
+ * Response constructor range (200–599) and cloning drops the `webSocket` handle.
  */
 export function applyCorsHeaders(
   request: Request,
   response: Response,
   allowedOrigins: string[],
 ): Response {
+  if (response.status === 101 || response.webSocket != null) {
+    return response;
+  }
   const origin = request.headers.get('origin');
   if (!origin || !allowedOrigins.includes(origin)) {
     return response;

@@ -3,6 +3,13 @@ body,
 #__nuxt {
   min-height: 100%;
   margin: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+html {
+  /* Edge-to-edge WebViews (Tauri Android) — pad via CSS env() in chrome */
+  padding: 0;
 }
 
 * {
@@ -13,4 +20,12 @@ button:focus-visible,
 a:focus-visible {
   outline: 2px solid var(--yfm-focus-ring);
   outline-offset: 2px;
+}
+
+/* Prevent iOS/Android WebView input zoom quirks without breaking layout */
+input,
+textarea,
+select,
+button {
+  font-size: 16px;
 }

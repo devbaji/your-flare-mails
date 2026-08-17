@@ -29,7 +29,8 @@
     "dev:web": "pnpm --filter @your-flare-mails/web dev",
     "dev:desktop": "pnpm --filter @your-flare-mails/desktop dev",
     "dev:android": "pnpm --filter @your-flare-mails/desktop tauri android dev",
-    "dev:ios": "pnpm --filter @your-flare-mails/desktop tauri ios dev"
+    "dev:ios": "pnpm --filter @your-flare-mails/desktop tauri ios dev",
+    "build:android": "pnpm --filter @your-flare-mails/desktop run build:android"
   },
   "devDependencies": {
     "@your-flare-mails/eslint-config": "workspace:*",

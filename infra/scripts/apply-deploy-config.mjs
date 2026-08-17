@@ -161,3 +161,12 @@ writeFileSync(
 console.log('Wrote apps/web/.env.production.local');
 console.log('\nNext: set secrets, migrate, then pnpm deploy:api / deploy:web');
 console.log('  See docs/deploy.md');
+if (env.FORCE_MOCK_PUSH === 'false') {
+  console.log(
+    '\nPush: FORCE_MOCK_PUSH=false — set FCM_SERVICE_ACCOUNT_JSON (and/or APNs) secrets:',
+  );
+  console.log(
+    '  cd workers/api && pnpm exec wrangler secret put FCM_SERVICE_ACCOUNT_JSON --config wrangler.deploy.jsonc',
+  );
+}
+console.log('Android APK: place google-services.json then pnpm build:android (docs/mobile.md)');

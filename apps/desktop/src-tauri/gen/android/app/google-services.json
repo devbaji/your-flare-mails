@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "609150142840",
+    "project_id": "your-flare-mails",
+    "storage_bucket": "your-flare-mails.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:609150142840:android:b64300eb7d7031943e208d",
+        "android_client_info": {
+          "package_name": "com.yourflaremails.desktop"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBHpTuQPfn3NKU9_LclVoUAcdFyv3ZqlFo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
