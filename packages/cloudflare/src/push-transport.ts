@@ -272,7 +272,7 @@ export class CloudflarePushTransport implements PushTransport {
               priority: 'HIGH',
               notification: {
                 // Must match MainActivity / FCMService MAIL_CHANNEL_ID
-                channel_id: 'yfm_mail_chime',
+                channel_id: 'yfm_mail_swoosh',
                 // Pre-Oreo / channel fallback; channel owns sound on API 26+
                 sound: 'yfm_notify',
                 default_vibrate_timings: true,

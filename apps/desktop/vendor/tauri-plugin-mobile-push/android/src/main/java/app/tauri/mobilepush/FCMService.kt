@@ -113,6 +113,6 @@ class FCMService : FirebaseMessagingService() {
     }
 
     companion object {
-        const val MAIL_CHANNEL_ID = "yfm_mail_chime"
+        const val MAIL_CHANNEL_ID = "yfm_mail_swoosh"
     }
 }

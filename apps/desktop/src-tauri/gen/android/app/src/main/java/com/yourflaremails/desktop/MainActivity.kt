@@ -19,7 +19,7 @@ class MainActivity : TauriActivity() {
   companion object {
     /** Must match FCM `android.notification.channel_id` and FCMService.MAIL_CHANNEL_ID. */
     /** Bump id when changing sound/importance so Android recreates the channel. */
-    const val MAIL_CHANNEL_ID = "yfm_mail_chime"
+    const val MAIL_CHANNEL_ID = "yfm_mail_swoosh"
 
     fun ensureMailNotificationChannel(context: Context) {
       if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
