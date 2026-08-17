@@ -4,7 +4,7 @@
  * Usage: node ./scripts/with-brand-env.mjs tauri android build --apk --target aarch64
  */
 import { spawnSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
@@ -43,6 +43,17 @@ const brandName = resolveBrandName(deployEnv);
 process.env.YFM_BRAND_NAME = brandName;
 process.env.NUXT_PUBLIC_YFM_BRAND_NAME = brandName;
 syncBrandName(brandName);
+
+// Keep custom notification sound in gen/android across rebuilds
+const notifySrc = join(desktopRoot, 'android/res/raw/yfm_notify.wav');
+const notifyDst = join(
+  desktopRoot,
+  'src-tauri/gen/android/app/src/main/res/raw/yfm_notify.wav',
+);
+if (existsSync(notifySrc)) {
+  mkdirSync(dirname(notifyDst), { recursive: true });
+  copyFileSync(notifySrc, notifyDst);
+}
 
 const [cmd, ...cmdArgs] = args;
 const result = spawnSync(cmd, cmdArgs, {

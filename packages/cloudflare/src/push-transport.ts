@@ -262,10 +262,21 @@ export class CloudflarePushTransport implements PushTransport {
               body: message.body,
             },
             data: Object.fromEntries(
-              Object.entries(message.data ?? {}).map(([k, v]) => [k, String(v)]),
+              Object.entries({
+                title: message.title,
+                body: message.body,
+                ...(message.data ?? {}),
+              }).map(([k, v]) => [k, String(v)]),
             ),
             android: {
               priority: 'HIGH',
+              notification: {
+                // Must match MainActivity / FCMService MAIL_CHANNEL_ID
+                channel_id: 'yfm_mail_chime',
+                // Pre-Oreo / channel fallback; channel owns sound on API 26+
+                sound: 'yfm_notify',
+                default_vibrate_timings: true,
+              },
             },
           },
         }),

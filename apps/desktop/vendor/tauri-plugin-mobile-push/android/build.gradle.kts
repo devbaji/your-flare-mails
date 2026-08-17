@@ -33,4 +33,5 @@ android {
 dependencies {
     compileOnly(project(":tauri-android"))
     implementation("com.google.firebase:firebase-messaging:23.4.1")
+    implementation("androidx.core:core-ktx:1.13.1")
 }

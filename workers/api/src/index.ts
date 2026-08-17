@@ -211,20 +211,34 @@ async function notifyMailbox(env: Env, event: MailboxRealtimeEvent): Promise<voi
     return;
   }
 
-  let subject: string | null = null;
+  let title =
+    event.type === 'message.created' ? 'New mail' : 'Message sent';
+  let body =
+    event.type === 'message.created'
+      ? 'A new message arrived in your mailbox'
+      : 'Your message was sent';
+  let subject = '';
+  let fromAddress = '';
+
   try {
     const message = await new MessageRepository(env.DB).findById(event.messageId);
-    subject = message?.subject?.trim() || null;
-  } catch (error) {
-    console.error('[push] subject lookup failed', error);
-  }
+    if (message) {
+      subject = message.subject?.trim() || '';
+      fromAddress = message.fromAddress?.trim() || '';
+      const fromName = message.fromName?.trim() || '';
+      const preview = previewMailBody(message.bodyText);
 
-  const title = event.type === 'message.created' ? 'New mail' : 'Message sent';
-  const body =
-    subject ||
-    (event.type === 'message.created'
-      ? 'A new message arrived in your mailbox'
-      : 'Your message was sent');
+      if (event.type === 'message.created') {
+        // Gmail-style: title = sender name (else address); body = subject + preview
+        title = fromName || fromAddress || 'New mail';
+      }
+
+      const subjectLine = subject || '(no subject)';
+      body = preview ? `${subjectLine}\n${preview}` : subjectLine;
+    }
+  } catch (error) {
+    console.error('[push] message lookup failed', error);
+  }
 
   try {
     await notifyMailboxDevices(
@@ -238,13 +252,24 @@ async function notifyMailbox(env: Env, event: MailboxRealtimeEvent): Promise<voi
           mailboxId: event.mailboxId,
           messageId: event.messageId,
           threadId: event.threadId,
-          subject: subject ?? '',
+          subject,
+          title,
+          body,
+          fromAddress,
         },
       },
     );
   } catch (error) {
     console.error('[push] notify failed', error);
   }
+}
+
+/** Collapse whitespace and truncate for notification preview lines. */
+function previewMailBody(text: string | null | undefined, maxLen = 140): string {
+  if (!text) return '';
+  const collapsed = text.replace(/\s+/g, ' ').trim();
+  if (!collapsed) return '';
+  return collapsed.length > maxLen ? `${collapsed.slice(0, maxLen - 1)}…` : collapsed;
 }
 
 function createPushTransport(env: Env): PushTransport {
