@@ -76,7 +76,7 @@ function setSidebarOpen(open: boolean) {
         <div class="yfm-mail-layout__brand">
           <img
             class="yfm-mail-layout__logo"
-            src="/logo.svg"
+            src="/logo.png"
             width="28"
             height="28"
             alt=""

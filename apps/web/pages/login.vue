@@ -52,14 +52,14 @@ async function onSubmit() {
 
 <template>
   <div v-if="!showForm" class="yfm-boot">
-    <img class="yfm-boot__logo" src="/logo.svg" width="48" height="48" alt="" aria-hidden="true" />
+    <img class="yfm-boot__logo" src="/logo.png" width="48" height="48" alt="" aria-hidden="true" />
     <p class="yfm-boot__brand">{{ brandName }}</p>
     <p class="yfm-boot__status">Loading…</p>
   </div>
   <div v-else class="yfm-login">
     <header class="yfm-login__header">
       <p class="yfm-login__brand">
-        <img class="yfm-login__logo" src="/logo.svg" width="28" height="28" alt="" aria-hidden="true" />
+        <img class="yfm-login__logo" src="/logo.png" width="28" height="28" alt="" aria-hidden="true" />
         <span>{{ brandName }}</span>
       </p>
       <button

@@ -56,7 +56,8 @@ class FCMService : FirebaseMessagingService() {
             PendingIntent.getActivity(this, remoteMessage.messageId?.hashCode() ?: 0, launch, flags)
 
         val smallIcon =
-            resources.getIdentifier("ic_launcher_foreground", "drawable", packageName).takeIf { it != 0 }
+            resources.getIdentifier("ic_notification", "drawable", packageName).takeIf { it != 0 }
+                ?: resources.getIdentifier("ic_launcher_foreground", "drawable", packageName).takeIf { it != 0 }
                 ?: android.R.drawable.ic_dialog_email
         val soundId = resources.getIdentifier("yfm_notify", "raw", packageName)
         val soundUri =

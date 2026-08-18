@@ -1,13 +1,14 @@
 # Branding — Devbaji Mails
 
-Source mark: **DB** monogram inside a mail envelope on teal plate.
+Master raster source: ChatGPT-generated DB+envelope mark (dark navy rounded squircle on transparent canvas).
 
 | File | Use |
 |------|-----|
-| `logo.svg` | Master vector |
-| `app-icon.png` | 1024×1024 source for Tauri / stores |
-| `app-icon-square.png` | Full-bleed square (Android densities) |
-| `logo-*.png` | Pre-rendered sizes |
+| `source-icon.png` | Original source PNG (reference) |
+| `app-icon.png` / `app-icon-1024.png` | 1024×1024 RGBA master (transparent outside squircle) — Tauri / stores |
+| `app-icon-square.png` | 1024×1024 adaptive foreground (~86% fill, transparent padding) |
+| `logo-*.png` | Pre-rendered sizes (16–512) |
+| `logo.svg` | Legacy vector; prefer raster masters above for icons |
 
 ## Regenerate platform icons
 
@@ -15,10 +16,8 @@ Source mark: **DB** monogram inside a mail envelope on teal plate.
 # From apps/desktop — writes src-tauri/icons (+ iOS)
 pnpm exec tauri icon ../../branding/app-icon.png
 
-# Web public assets (copy from branding/)
-cp branding/logo.svg apps/web/public/favicon.svg
-cp branding/logo.svg apps/web/public/logo.svg
-# …plus favicon-*.png / apple-touch-icon / icon-192 / icon-512 as needed
+# Web public assets (from branding/)
+# favicon-16/32, apple-touch-icon (180), icon-192/512, logo.png (128), favicon.ico
 ```
 
 Android launcher mipmaps live under `apps/desktop/src-tauri/gen/android/app/src/main/res/mipmap-*`.
